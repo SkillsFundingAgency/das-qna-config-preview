@@ -1,0 +1,69 @@
+﻿@using SFA.DAS.QnA.Config.Preview.Web.Controllers
+@model PreviewViewModel
+@{
+    ViewBag.Title = "Preview QnA Workflow";
+    Layout = "_Layout";
+}
+
+<main class="govuk-main-wrapper " id="main-content" role="main">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <form class="preview-form" asp-action="StartApplication" asp-controller="Application" method="POST">
+
+                <div class="js-error-summary govuk-error-summary" role="alert" aria-labelledby="error-summary-title" tabindex="-1" data-module="error-summary">
+                    <h2 class="govuk-error-summary__title" id="error-summary-title">
+                        There is a problem
+                    </h2>
+                    <div class="govuk-error-summary__body">
+                        <ul class="js-error-summary-list govuk-list govuk-error-summary__list"></ul>
+                    </div>
+                </div>
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="error-summary">
+                        <h2 class="govuk-error-summary__title" id="error-summary-title">
+                            There is a problem
+                        </h2>
+                        <div class="govuk-error-summary__body">
+                            <ul class="govuk-list govuk-error-summary__list">
+                                <li><a sfa-validation-for="ProjectType"></a></li>
+                                <li><a sfa-validation-for="SequenceNo"></a></li>
+                            </ul>
+                        </div>
+                    </div>
+                }
+
+                <h1 class="govuk-heading-xl">
+                    Start a QnA workflow preview
+                </h1>
+
+                <div>
+                    <div class="govuk-form-group" sfa-validation-for="ProjectType" sfa-validationerror-class="govuk-form-group--error">
+                        <label class="govuk-label" for="ProjectType">
+                            Project type
+                        </label>
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <span class="govuk-error-message" asp-validation-for="ProjectType"></span>
+                        }
+                        <input class="govuk-input" name="ProjectType" sfa-validation-for="ProjectType" sfa-validationerror-class="govuk-input--error" asp-for="ProjectType" type="text" maxlength="120" />
+                    </div>
+                    <div class="govuk-form-group" sfa-validation-for="SequenceNo" sfa-validationerror-class="govuk-form-group--error">
+                        <label class="govuk-label" for="SequenceNo">
+                            Sequence Number
+                        </label>
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <span class="govuk-error-message" asp-validation-for="SequenceNo"></span>
+                        }
+                        <input class="govuk-input" name="SequenceNo" sfa-validation-for="SequenceNo" sfa-validationerror-class="govuk-input--error" asp-for="SequenceNo" type="number" maxlength="3" />
+                    </div>
+                </div>
+
+                <button class="govuk-button govuk-!-margin-right-1" type="submit" value="Start Application">Start Application</button>
+
+            </form>
+        </div>
+    </div>
+</main>
