@@ -65,6 +65,7 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
                     OrganisationName = OrganisationName,
                     OrganisationReferenceId = OrganisationId.ToString(),
                     OrganisationType = OrganisationType,
+                    ApplyProviderRoute = "1",
                     CompanySummary = new ApplyTypes.CompaniesHouse.CompaniesHouseSummary(),
                     CharitySummary = new ApplyTypes.CharityCommission.CharityCommissionSummary()
                 })
@@ -603,11 +604,7 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
                 }
             }
 
-            if (!answers.Any())
-            {
-                answers.Add(new Answer { QuestionId = questionId, Value = "" });
-            }
-            else if (questionId != null && answers.Any(y => y.QuestionId.Contains(questionId)))
+            if (questionId != null && answers.Any(y => y.QuestionId.Contains(questionId)))
             {
                 if (answers.All(x => x.Value == "" || Regex.IsMatch(x.Value, "^[,]+$")))
                 {
@@ -667,37 +664,6 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
             }
 
             return answers;
-        }
-
-        private static List<ValidationErrorDetail> ValidateSubmit(List<Section> qnaSections, List<ApplySection> applySections)
-        {
-            var validationErrors = new List<ValidationErrorDetail>();
-
-            var sections = qnaSections?.Where(x => !applySections?.Any(p => p.SectionNo == x.SectionNo && p.NotRequired) ?? false).ToList();
-
-            if (sections is null)
-            {
-                var validationError = new ValidationErrorDetail(string.Empty, $"Cannot submit empty sequence");
-                validationErrors.Add(validationError);
-            }
-            else if (sections.Any(sec => sec.QnAData.Pages.Count(x => x.Complete) != sec.QnAData.Pages.Count(x => x.Active)))
-            {
-                foreach (var sectionQuestionsNotYetCompleted in sections.Where(sec => sec.QnAData.Pages.Count(x => x.Complete) != sec.QnAData.Pages.Count(x => x.Active)))
-                {
-                    var validationError = new ValidationErrorDetail(sectionQuestionsNotYetCompleted.Id.ToString(), $"You need to complete the '{sectionQuestionsNotYetCompleted.LinkTitle}' section");
-                    validationErrors.Add(validationError);
-                }
-            }
-            else if (sections.Any(sec => sec.QnAData.RequestedFeedbackAnswered is false || sec.QnAData.Pages.Any(p => !p.AllFeedbackIsCompleted)))
-            {
-                foreach (var sectionFeedbackNotYetCompleted in sections.Where(sec => sec.QnAData.RequestedFeedbackAnswered is false || sec.QnAData.Pages.Any(p => !p.AllFeedbackIsCompleted)))
-                {
-                    var validationError = new ValidationErrorDetail(sectionFeedbackNotYetCompleted.Id.ToString(), $"You need to complete the '{sectionFeedbackNotYetCompleted.LinkTitle}' section");
-                    validationErrors.Add(validationError);
-                }
-            }
-
-            return validationErrors;
         }
 
 

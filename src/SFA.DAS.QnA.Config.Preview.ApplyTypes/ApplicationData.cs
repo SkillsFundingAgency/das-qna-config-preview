@@ -1,4 +1,5 @@
-﻿using SFA.DAS.QnA.Api.Types;
+﻿using Newtonsoft.Json;
+using SFA.DAS.QnA.Api.Types;
 using SFA.DAS.QnA.Config.Preview.ApplyTypes.CharityCommission;
 using SFA.DAS.QnA.Config.Preview.ApplyTypes.CompaniesHouse;
 using System;
@@ -18,6 +19,8 @@ namespace SFA.DAS.QnA.Config.Preview.ApplyTypes
         public string TradingName { get; set; }
         public bool UseTradingName { get; set; }
         public string ContactGivenName { get; set; }
+        [JsonProperty(PropertyName = "Apply-ProviderRoute")]
+        public string ApplyProviderRoute {get;set;}
 
         public CompaniesHouseSummary CompanySummary { get; set; }
         public CharityCommissionSummary CharitySummary { get; set; }
