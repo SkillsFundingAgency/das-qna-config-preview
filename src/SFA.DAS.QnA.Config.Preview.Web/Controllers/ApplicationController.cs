@@ -72,9 +72,15 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
 
             var qnaResponse = await _qnaApiClient.StartApplications(applicationStartRequest);
             var allApplicationSequences = await _qnaApiClient.GetAllApplicationSequences(qnaResponse.ApplicationId);
-            var sections = allApplicationSequences.Select(async sequence => await _qnaApiClient.GetSections(qnaResponse.ApplicationId, sequence.Id)).Select(t => t.Result).ToList();
+            var sequenceNos = String.Join(',',allApplicationSequences.Select(x => x.SequenceNo));
+            foreach (var _ in allApplicationSequences.Where(seq => seq.SequenceNo == previewViewModel.SequenceNo).Select(seq => new { }))
+            {
+                var sections = allApplicationSequences.Select(async sequence => await _qnaApiClient.GetSections(qnaResponse.ApplicationId, sequence.Id)).Select(t => t.Result).ToList();
+                return RedirectToAction("Sequence", new { Id = qnaResponse.ApplicationId, sequenceNo = previewViewModel.SequenceNo });
+            }
 
-            return RedirectToAction("Sequence", new { Id = qnaResponse.ApplicationId, sequenceNo = previewViewModel.SequenceNo });
+            ModelState.AddModelError(nameof(previewViewModel.SequenceNo),$"Sequence number not found. Valid sequences are: {sequenceNos}.");
+            return View(previewViewModel);
         }
 
         [HttpGet("/Application/{Id}/Sequence/{sequenceNo}")]

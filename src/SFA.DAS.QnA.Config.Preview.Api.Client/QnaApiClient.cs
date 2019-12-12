@@ -113,6 +113,15 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
             }
         }
 
+        public async Task<List<Project>> GetProjects()
+        {
+            using (var request = new HttpRequestMessage(HttpMethod.Get, $"/config/projects"))
+            {
+                return await RequestAndDeserialiseAsync<List<Project>>(request,
+                    $"Could not find the section");
+            }
+        }
+
         public async Task<Section> GetSection(Guid applicationId, Guid sectionId)
         {
             using (var request = new HttpRequestMessage(HttpMethod.Get, $"/applications/{applicationId}/sections/{sectionId}"))
@@ -154,6 +163,15 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
             using (var request = new HttpRequestMessage(HttpMethod.Get, $"/applications/{applicationId}/sequences/{sequenceNo}"))
             {
                 return await RequestAndDeserialiseAsync<Sequence>(request,
+                    $"Could not find the sequence");
+            }
+        }
+
+        public async Task<List<Workflow>> GetWorkflows(Guid projectId)
+        {
+            using (var request = new HttpRequestMessage(HttpMethod.Get, $"/workflows/{projectId}"))
+            {
+                return await RequestAndDeserialiseAsync<List<Workflow>>(request,
                     $"Could not find the sequence");
             }
         }

@@ -30,5 +30,7 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
         Task DeleteFile(Guid applicationId, Guid sectionId, string pageId, string questionId, string fileName);
         Task<Page> RemovePageAnswer(Guid applicationId, Guid sectionId, string pageId, Guid answerId);
         Task<bool> AllFeedbackCompleted(Guid applicationId, Guid sequenceId);
+        Task<List<Project>> GetProjects();
+        Task<List<Workflow>> GetWorkflows(Guid projectId);
     }
 }
