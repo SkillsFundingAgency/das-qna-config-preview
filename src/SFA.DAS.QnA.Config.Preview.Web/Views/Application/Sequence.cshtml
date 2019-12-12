@@ -1,0 +1,67 @@
+@using SFA.DAS.QnA.Config.Preview.ApplyTypes
+@model SFA.DAS.QnA.Config.Preview.Web.ViewModels.Apply.SequenceViewModel
+
+@{
+    ViewBag.Title = "Application overview";
+    Layout = "_Layout";
+}
+
+<a href="@Url.Action("StartApplication", "Application")" class="govuk-back-link">Back to home</a>
+
+<main class="govuk-main-wrapper " id="main-content" role="main">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+
+            @if (Model.PageContext != null)
+            {
+                <span class="govuk-caption-xl">
+                    @Html.Raw(Model.PageContext)
+                </span>
+            }
+            <h1 class="govuk-heading-xl">Application overview</h1>
+
+            @if (!ViewData.ModelState.IsValid || Model.ErrorMessages?.Any() is true)
+            {
+                <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="error-summary">
+                    <h2 class="govuk-error-summary__title" id="error-summary-title">
+                        There is a problem
+                    </h2>
+                    <div class="govuk-error-summary__body">
+                        <ul class="govuk-list govuk-error-summary__list">
+                            @foreach (var error in Model.ErrorMessages)
+                            {
+                                <li>
+                                    <a href="#@error.Field">@error.ErrorMessage</a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            }
+
+            <ul class="govuk-list">
+                @foreach (var applicationSection in Model.Sections.OrderBy(s => s.SectionNo))
+                {
+                    if (!(Model.ApplySections.FirstOrDefault(x => x.SectionNo == applicationSection.SectionNo)?.NotRequired).Value)
+                    {
+                        <li>
+                            <h2 id="@applicationSection.Id" class="govuk-heading-m govuk-!-margin-bottom-2">
+                                @applicationSection.LinkTitle
+                            </h2>
+                            <span id="company-details-hint" class="govuk-hint">
+                                @applicationSection.QnAData.Pages.Count(x => x.Complete == true) of @applicationSection.QnAData.Pages.Count(x => x.Active) questions completed
+                            </span>
+
+                            <a class="govuk-link" href="@Url.Action("Section", "Application", new { @Model.Id, Model.SequenceNo, sectionNo = applicationSection.SectionNo })">
+                                Go to @applicationSection.LinkTitle.ToLower()
+                            </a>
+
+                        </li>
+                        <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
+                    }
+                }
+            </ul>
+
+        </div>
+    </div>
+</main>
