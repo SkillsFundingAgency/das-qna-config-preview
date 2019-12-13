@@ -2,20 +2,34 @@
 using SFA.DAS.QnA.Config.Preview.Api.Client;
 using SFA.DAS.QnA.Config.Preview.Web.ViewModels;
 using System.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 
 namespace SFA.DAS.QnA.Config.Preview.Web.Validators
 {
     public class PreviewViewModelValidator: AbstractValidator<PreviewViewModel>
     {
-        private const string ProjectTypeFieldEmptyError = "Project type cannot be empty";
-        private const string ProjectTypeFieldDoesNotExistError = "Project type does not exist in QnA Workflow";
-        private const string SequenceNoFieldEmptyError = "Sequence number cannot be empty or zero";
+        private const string ProjectTypeFieldEmptyError = "Enter a project type";
+        private const string ApplicaitonDataEmptyError = "Enter application data";
+        private const string ProjectTypeFieldDoesNotExistError = "Project type does not exist in QnA workflow";
+        private const string SequenceNoFieldEmptyError = "Enter a sequence number";
+        private const string InvalidJson = "Enter application data in a correct json format";
+
         public PreviewViewModelValidator(IQnaApiClient qnaApiClient)
         {
             RuleFor(vm => vm).Custom((vm, context) =>
             {  
-                if (vm.SequenceNo == 0)
+                if (vm.SequenceNo == null)
                     context.AddFailure(nameof(vm.SequenceNo), SequenceNoFieldEmptyError);
+                if(string.IsNullOrEmpty(vm.ApplicationData))
+                    context.AddFailure(nameof(vm.ApplicationData), ApplicaitonDataEmptyError);
+                else
+                {
+                    if (!IsValidJson(vm.ApplicationData))
+                        context.AddFailure(nameof(vm.ApplicationData), InvalidJson);
+                }
+
                 if (string.IsNullOrEmpty(vm.ProjectType))
                     context.AddFailure(nameof(vm.ProjectType), ProjectTypeFieldEmptyError);
                 else
@@ -35,6 +49,32 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Validators
                         context.AddFailure(nameof(vm.ProjectType), ProjectTypeFieldDoesNotExistError);
                 }
             });
+        }
+
+        private static bool IsValidJson(string strJson)
+        {
+            strJson = strJson.Trim();
+            if ((strJson.StartsWith("{") && strJson.EndsWith("}")) ||
+                (strJson.StartsWith("[") && strJson.EndsWith("]")))
+            {
+                try
+                {
+                    var obj = JToken.Parse(strJson);
+                    return true;
+                }
+                catch (JsonReaderException jex)
+                {
+                    return false;
+                }
+                catch (Exception ex)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }

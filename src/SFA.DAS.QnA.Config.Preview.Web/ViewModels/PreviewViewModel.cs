@@ -8,6 +8,7 @@ namespace SFA.DAS.QnA.Config.Preview.Web.ViewModels
     public class PreviewViewModel
     {
         public string ProjectType { get; set; }
-        public int SequenceNo { get; set; }
+        public int? SequenceNo { get; set; }
+        public string ApplicationData { get; set; }
     }
 }

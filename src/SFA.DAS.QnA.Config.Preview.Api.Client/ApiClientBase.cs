@@ -15,7 +15,7 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
     public abstract class ApiClientBase : IDisposable
     {
         protected ITokenService TokenService;
-        private readonly ILogger<ApiClientBase> _logger;
+        private readonly ILogger<QnaApiClient> _logger;
         protected HttpClient HttpClient;
 
         private readonly RetryPolicy<HttpResponseMessage> _retryPolicy;
@@ -26,7 +26,7 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
             NullValueHandling = NullValueHandling.Ignore
         };
 
-        protected ApiClientBase(string baseUri, ITokenService tokenService, ILogger<ApiClientBase> logger)
+        protected ApiClientBase(string baseUri, ITokenService tokenService, ILogger<QnaApiClient> logger)
         {
             _logger = logger;
 
@@ -41,7 +41,7 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
                     retryAttempt)));
         }
 
-        protected ApiClientBase(HttpClient httpClient, ITokenService tokenService, ILogger<ApiClientBase> logger)
+        protected ApiClientBase(HttpClient httpClient, ITokenService tokenService, ILogger<QnaApiClient> logger)
         {
             TokenService = tokenService;
 

@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SFA.DAS.QnA.Config.Preview.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SFA.DAS.QnA.Config.Preview.Types", "SFA.DAS.QnA.Config.Preview.ApplyTypes\SFA.DAS.QnA.Config.Preview.Types.csproj", "{D29AEFBB-857F-4C72-BA0F-CCF23D3A3FFF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SFA.DAS.QnA.Config.Preview.Session", "SFA.DAS.QnA.Config.Preview.Session\SFA.DAS.QnA.Config.Preview.Session.csproj", "{991B2CF4-B49C-47FA-9565-C84D27F4C03B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{D29AEFBB-857F-4C72-BA0F-CCF23D3A3FFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D29AEFBB-857F-4C72-BA0F-CCF23D3A3FFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D29AEFBB-857F-4C72-BA0F-CCF23D3A3FFF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{991B2CF4-B49C-47FA-9565-C84D27F4C03B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{991B2CF4-B49C-47FA-9565-C84D27F4C03B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{991B2CF4-B49C-47FA-9565-C84D27F4C03B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{991B2CF4-B49C-47FA-9565-C84D27F4C03B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
