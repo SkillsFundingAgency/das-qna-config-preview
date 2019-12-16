@@ -15,11 +15,9 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
 {
     public class QnaApiClient : ApiClientBase, IQnaApiClient
     {
-        private readonly ILogger<QnaApiClient> _logger;
 
         public QnaApiClient(string baseUri, ITokenService qnaTokenService, ILogger<QnaApiClient> logger) : base(baseUri, qnaTokenService, logger)
         {
-            _logger = logger;
         }
 
         public async Task<AddPageAnswerResponse> AddAnswersToMultipleAnswerPage(Guid applicationId, Guid sectionId, string pageId, List<Answer> answer)

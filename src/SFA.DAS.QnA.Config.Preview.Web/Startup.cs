@@ -7,7 +7,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Logging;
 using SFA.DAS.QnA.Config.Preview.Api.Client;
+using SFA.DAS.QnA.Config.Preview.Session;
 using SFA.DAS.QnA.Config.Preview.Settings;
 using SFA.DAS.QnA.Config.Preview.Web.Extensions;
 
@@ -55,17 +58,22 @@ namespace SFA.DAS.QnA.Config.Preview.Web
 
             services.AddHealthChecks();
 
+            IdentityModelEventSource.ShowPII = true;
+
             ConfigureIoc(services);
         }
 
         private void ConfigureIoc(IServiceCollection services)
-        {
+        { 
             services.AddOptions();
+            services.AddLogging();
             services.AddApplicationInsightsTelemetry();
             services.AddTransient<ITokenService, TokenService>();
             services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddSingleton<ISessionService>( s => new SessionService(s.GetService<IHttpContextAccessor>(), _config["EnvironmentName"]));
             services.AddTransient<IWebConfiguration, WebConfiguration>();
-            services.AddTransient<IQnaApiClient>(s => new QnaApiClient(Configuration.QnaApiAuthentication.ApiBaseAddress, s.GetService<ITokenService>(),null));
+            services.AddTransient<IQnaApiClient>(s => new QnaApiClient(Configuration.QnaApiAuthentication.ApiBaseAddress, s.GetService<ITokenService>(), s.GetService<ILogger<QnaApiClient>>()));
+           
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

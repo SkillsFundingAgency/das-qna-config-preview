@@ -16,6 +16,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SFA.DAS.QnA.Config.Preview.Web.ViewModels;
+using SFA.DAS.QnA.Config.Preview.Session;
 
 namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
 {
@@ -23,15 +24,17 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
     {
         private readonly ILogger<ApplicationController> _logger;
         private readonly IQnaApiClient _qnaApiClient;
+        private readonly ISessionService _sessionService;
         private const string UserReference = "8477e176-fe4b-4435-94a9-08d75ba10b41";
         private const string OrganisationName = "Preview Organisation";
         private readonly Guid OrganisationId = Guid.NewGuid();
         private const string OrganisationType = "Trade Body";
 
-        public ApplicationController(IQnaApiClient qnaApiClient, 
+        public ApplicationController(IQnaApiClient qnaApiClient, ISessionService sessionService,
              ILogger<ApplicationController> logger)
         {
             _logger = logger;
+            _sessionService = sessionService;
             _qnaApiClient = qnaApiClient;
         }
 
@@ -44,7 +47,10 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
         [HttpGet("/Application/StartApplication")]
         public IActionResult StartApplication()
         {
-            return View();
+            var previewViewModel = new PreviewViewModel();
+            if (_sessionService.Exists("viewPreviewData"))
+                previewViewModel = _sessionService.Get<PreviewViewModel>("viewPreviewData");
+            return View(previewViewModel);
         }
 
         [HttpPost("/Application/StartApplication")]
@@ -54,33 +60,41 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
             {
                 return View(previewViewModel);
             }
-
+          
             var applicationStartRequest = new StartApplicationRequest
             {
                 UserReference = UserReference,
                 WorkflowType = previewViewModel.ProjectType,
-                ApplicationData = JsonConvert.SerializeObject(new ApplicationData
-                {
-                    UseTradingName = false,
-                    OrganisationName = OrganisationName,
-                    OrganisationReferenceId = OrganisationId.ToString(),
-                    OrganisationType = OrganisationType,
-                    ApplyProviderRoute = "1",
-                    CompanySummary = new ApplyTypes.CompaniesHouse.CompaniesHouseSummary(),
-                    CharitySummary = new ApplyTypes.CharityCommission.CharityCommissionSummary()
-                })
+                ApplicationData = previewViewModel.ApplicationData
             };
 
-            var qnaResponse = await _qnaApiClient.StartApplications(applicationStartRequest);
+            var qnaResponse = new StartApplicationResponse();
+            try
+            {
+                qnaResponse = await _qnaApiClient.StartApplications(applicationStartRequest);
+            }
+            catch (HttpRequestException ex) {
+                dynamic obj = JToken.Parse(ex.Message);
+                if(obj.statusCode == "400")
+                {
+                    ModelState.AddModelError(nameof(previewViewModel.ApplicationData), (string)obj.message);
+                    return View(previewViewModel);
+                }
+            }
+
+            if (_sessionService.Exists("viewPreviewData"))
+                _sessionService.Remove("viewPreviewData");
+            _sessionService.Set("viewPreviewData", JsonConvert.SerializeObject(previewViewModel));
+
             var allApplicationSequences = await _qnaApiClient.GetAllApplicationSequences(qnaResponse.ApplicationId);
-            var sequenceNos = String.Join(',',allApplicationSequences.Select(x => x.SequenceNo));
+            var sequenceNos = string.Join(',',allApplicationSequences.Select(x => x.SequenceNo));
             foreach (var _ in allApplicationSequences.Where(seq => seq.SequenceNo == previewViewModel.SequenceNo).Select(seq => new { }))
             {
                 var sections = allApplicationSequences.Select(async sequence => await _qnaApiClient.GetSections(qnaResponse.ApplicationId, sequence.Id)).Select(t => t.Result).ToList();
                 return RedirectToAction("Sequence", new { Id = qnaResponse.ApplicationId, sequenceNo = previewViewModel.SequenceNo });
             }
 
-            ModelState.AddModelError(nameof(previewViewModel.SequenceNo),$"Sequence number not found. Valid sequences are: {sequenceNos}.");
+            ModelState.AddModelError(nameof(previewViewModel.SequenceNo),$"Sequence number not found. Valid sequences are: {sequenceNos}");
             return View(previewViewModel);
         }
 
@@ -107,7 +121,6 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
         [HttpGet("/Application/{Id}/Sequences/{sequenceNo}/Sections/{sectionNo}")]
         public async Task<IActionResult> Section(Guid Id, int sequenceNo, int sectionNo)
         {
-            var sequence = await _qnaApiClient.GetSequenceBySequenceNo(Id, sequenceNo);
             var section = await _qnaApiClient.GetSectionBySectionNo(Id, sequenceNo, sectionNo);
             var applicationSection = new ApplicationSection { Section = section, Id = Id };
             applicationSection.SequenceNo = sequenceNo;
@@ -127,7 +140,7 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
             }
         }
 
-        [HttpGet("/Application/{Id}/Sequences/{sequenceNo}/Sections/{sectionNo}/Pages/{pageId}")]
+        [HttpGet("/Application/{Id}/Sequences/{sequenceNo}/Sections/{sectionNo}/Pages/{pageId}"), ModelStatePersist(ModelStatePersist.RestoreEntry)]
         public async Task<IActionResult> Page(Guid Id, int sequenceNo, int sectionNo, string pageId, string __redirectAction, string __summaryLink = "Show")
         {
             var sequence = await _qnaApiClient.GetSequenceBySequenceNo(Id, sequenceNo);
@@ -209,7 +222,7 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
             return View("~/Views/Application/Pages/Index.cshtml", viewModel);
         }
 
-        [HttpPost("/Application/{Id}/Sequences/{sequenceNo}/Sections/{sectionNo}/Pages/{pageId}/multiple")]
+        [HttpPost("/Application/{Id}/Sequences/{sequenceNo}/Sections/{sectionNo}/Pages/{pageId}/multiple"), ModelStatePersist(ModelStatePersist.Store)]
         public async Task<IActionResult> SaveMultiplePageAnswers(Guid Id, int sequenceNo, int sectionNo, string pageId, string __redirectAction, string __formAction)
         {
             try
@@ -307,7 +320,7 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
             }
         }
 
-        [HttpPost("/Application/{Id}/Sequences/{sequenceNo}/Sections/{sectionNo}/Pages/{pageId}")]
+        [HttpPost("/Application/{Id}/Sequences/{sequenceNo}/Sections/{sectionNo}/Pages/{pageId}"), ModelStatePersist(ModelStatePersist.Store)]
         public async Task<IActionResult> SaveAnswers(Guid Id, int sequenceNo, int sectionNo, string pageId, string __redirectAction)
         {
             var updatePageResult = new SetPageAnswersResponse();
@@ -604,7 +617,11 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
                 }
             }
 
-            if (questionId != null && answers.Any(y => y.QuestionId.Contains(questionId)))
+            if (!answers.Any() && !string.IsNullOrEmpty(questionId))
+            {
+                answers.Add(new Answer { QuestionId = questionId, Value = "" });
+            }
+            else if (questionId != null && answers.Any(y => y.QuestionId.Contains(questionId)))
             {
                 if (answers.All(x => x.Value == "" || Regex.IsMatch(x.Value, "^[,]+$")))
                 {
@@ -694,6 +711,7 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
 
         }
     }
+
     public sealed class BadRequestException : Exception
     {
         public BadRequestException() : base("") { }

@@ -29,6 +29,7 @@
                             <ul class="govuk-list govuk-error-summary__list">
                                 <li><a sfa-validation-for="ProjectType"></a></li>
                                 <li><a sfa-validation-for="SequenceNo"></a></li>
+                                <li><a sfa-validation-for="ApplicationData"></a></li>
                             </ul>
                         </div>
                     </div>
@@ -59,6 +60,16 @@
                         }
                         <input class="govuk-input" name="SequenceNo" sfa-validation-for="SequenceNo" sfa-validationerror-class="govuk-input--error" asp-for="SequenceNo" type="number" maxlength="3" />
                     </div>
+                    <div class="govuk-form-group" sfa-validation-for="ApplicationData" sfa-validationerror-class="govuk-form-group--error">
+                        <label class="govuk-label" for="ApplicationData">
+                            Application Data Json
+                        </label>
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <span class="govuk-error-message" asp-validation-for="ApplicationData"></span>
+                        }
+                        <textarea class="govuk-textarea"  name="ApplicationData" sfa-validation-for="ApplicationData" sfa-validationerror-class="govuk-textarea--error" asp-for="ApplicationData" rows="10"></textarea>
+                     </div>
                 </div>
 
                 <button class="govuk-button govuk-!-margin-right-1" type="submit" value="Start Application">Start Application</button>
