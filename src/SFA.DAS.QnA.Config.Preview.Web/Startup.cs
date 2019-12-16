@@ -19,11 +19,13 @@ namespace SFA.DAS.QnA.Config.Preview.Web
     public class Startup
     {
         private readonly IConfiguration _config;
+        private readonly IWebHostEnvironment _hostingEnvironment;
         private const string ServiceName = "SFA.DAS.QnA.Config.Preview";
         private const string Version = "1.0";
 
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IWebHostEnvironment hostingEnvironment)
         {
+            _hostingEnvironment = hostingEnvironment;
             _config = configuration;
         }
 
@@ -68,7 +70,7 @@ namespace SFA.DAS.QnA.Config.Preview.Web
             services.AddOptions();
             services.AddLogging();
             services.AddApplicationInsightsTelemetry();
-            services.AddTransient<ITokenService, TokenService>();
+            services.AddTransient<ITokenService, TokenService>(s => new TokenService(Configuration, _hostingEnvironment));
             services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton<ISessionService>( s => new SessionService(s.GetService<IHttpContextAccessor>(), _config["EnvironmentName"]));
             services.AddTransient<IWebConfiguration, WebConfiguration>();
