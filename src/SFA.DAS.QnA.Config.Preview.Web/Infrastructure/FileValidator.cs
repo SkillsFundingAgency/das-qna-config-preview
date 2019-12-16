@@ -16,7 +16,7 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Infrastructure
             ValidationDefinition typeValidation = null;
             var fileValidationPassed = true;
 
-            if (answers != null && answers[0]?.Value == string.Empty)
+            if (answers != null && answers.Any() && string.IsNullOrEmpty(answers[0]?.Value))
             {
                 typeValidation = page.Questions.FirstOrDefault(q => q.QuestionId == answers[0].QuestionId)?.Input.Validations.FirstOrDefault(v => v.Name == "Required");
                 if (typeValidation != null)
