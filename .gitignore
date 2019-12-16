@@ -277,11 +277,10 @@ src/SFA.DAS.AssessorService.Web.Specflow.Tests/Project/**/*.*
 
 # Minified css and js
 *.min.js
-*.min.css
+/src/SFA.DAS.QnA.Config.Preview.Web/wwwroot/stylesheets/application.min.css
 
 # AppSetting environment files
 *.development.json
 
 #Redundant specflow project
-src/SFA.DAS.AssessorService.Application.Api.Specflow.Tests/**/*.*
 src/global.json
