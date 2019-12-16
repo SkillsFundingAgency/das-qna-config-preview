@@ -5,6 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\..\..\..\..\Users\arshed\.nuget\packages\microsoft.applicationinsights.nlogtarget\2.12.0\content\app.config.install.xdt" Link="app.config.install.xdt" />
+    <None Include="..\..\..\..\..\Users\arshed\.nuget\packages\microsoft.applicationinsights.nlogtarget\2.12.0\content\app.config.uninstall.xdt" Link="app.config.uninstall.xdt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BundlerMinifier.Core" Version="3.2.435" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="8.6.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.12.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.NLogTarget" Version="2.12.0" />
