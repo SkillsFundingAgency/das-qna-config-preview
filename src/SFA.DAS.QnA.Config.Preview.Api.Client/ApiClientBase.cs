@@ -18,7 +18,7 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
         private readonly ILogger<QnaApiClient> _logger;
         protected HttpClient HttpClient;
 
-        private readonly RetryPolicy<HttpResponseMessage> _retryPolicy;
+        private readonly AsyncRetryPolicy<HttpResponseMessage> _retryPolicy;
 
         protected readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings
         {
