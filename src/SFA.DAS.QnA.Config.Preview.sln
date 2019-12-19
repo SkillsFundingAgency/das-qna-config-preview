@@ -11,7 +11,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SFA.DAS.QnA.Config.Preview.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SFA.DAS.QnA.Config.Preview.Types", "SFA.DAS.QnA.Config.Preview.ApplyTypes\SFA.DAS.QnA.Config.Preview.Types.csproj", "{D29AEFBB-857F-4C72-BA0F-CCF23D3A3FFF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SFA.DAS.QnA.Config.Preview.Session", "SFA.DAS.QnA.Config.Preview.Session\SFA.DAS.QnA.Config.Preview.Session.csproj", "{991B2CF4-B49C-47FA-9565-C84D27F4C03B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SFA.DAS.QnA.Config.Preview.Session", "SFA.DAS.QnA.Config.Preview.Session\SFA.DAS.QnA.Config.Preview.Session.csproj", "{991B2CF4-B49C-47FA-9565-C84D27F4C03B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SFA.DAS.QnA.Config.Preview.Data", "SFA.DAS.QnA.Config.Preview.Data\SFA.DAS.QnA.Config.Preview.Data.csproj", "{0A5698C2-008B-4ADC-ACBF-EF8EB3AB4E6C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SFA.DAS.QnA.Config.Preview.Application", "SFA.DAS.QnA.Config.Preview.Application\SFA.DAS.QnA.Config.Preview.Application.csproj", "{2C2B3DBD-DD23-4402-B200-08CAEA6DEE93}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{AEA8F76C-329F-4E82-AFC1-1BD374F4E28A}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +48,14 @@ Global
 		{991B2CF4-B49C-47FA-9565-C84D27F4C03B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{991B2CF4-B49C-47FA-9565-C84D27F4C03B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{991B2CF4-B49C-47FA-9565-C84D27F4C03B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A5698C2-008B-4ADC-ACBF-EF8EB3AB4E6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A5698C2-008B-4ADC-ACBF-EF8EB3AB4E6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A5698C2-008B-4ADC-ACBF-EF8EB3AB4E6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A5698C2-008B-4ADC-ACBF-EF8EB3AB4E6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C2B3DBD-DD23-4402-B200-08CAEA6DEE93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C2B3DBD-DD23-4402-B200-08CAEA6DEE93}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C2B3DBD-DD23-4402-B200-08CAEA6DEE93}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C2B3DBD-DD23-4402-B200-08CAEA6DEE93}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

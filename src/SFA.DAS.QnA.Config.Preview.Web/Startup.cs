@@ -1,18 +1,26 @@
 using System;
 using FluentValidation.AspNetCore;
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.SqlServer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Logging;
 using SFA.DAS.QnA.Config.Preview.Api.Client;
+using SFA.DAS.QnA.Config.Preview.Data;
 using SFA.DAS.QnA.Config.Preview.Session;
 using SFA.DAS.QnA.Config.Preview.Settings;
 using SFA.DAS.QnA.Config.Preview.Web.Extensions;
+using Swashbuckle.AspNetCore.Swagger;
+using System.Reflection;
+using System.IO;
 
 namespace SFA.DAS.QnA.Config.Preview.Web
 {
@@ -31,12 +39,9 @@ namespace SFA.DAS.QnA.Config.Preview.Web
 
         public IWebConfiguration Configuration { get; set; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             Configuration = ConfigurationService.GetConfig(_config["EnvironmentName"], _config["ConfigurationStorageConnectionString"], Version, ServiceName).Result;
-
-
             services.AddMvc()
                 .AddControllersAsServices()
                 .AddSessionStateTempDataProvider()
@@ -59,9 +64,6 @@ namespace SFA.DAS.QnA.Config.Preview.Web
             });
 
             services.AddHealthChecks();
-
-            IdentityModelEventSource.ShowPII = true;
-
             ConfigureIoc(services);
         }
 
@@ -70,12 +72,29 @@ namespace SFA.DAS.QnA.Config.Preview.Web
             services.AddOptions();
             services.AddLogging();
             services.AddApplicationInsightsTelemetry();
+           
+            services.AddTransient<IWebConfiguration, WebConfiguration>();
             services.AddTransient<ITokenService, TokenService>(s => new TokenService(Configuration, _hostingEnvironment));
             services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton<ISessionService>( s => new SessionService(s.GetService<IHttpContextAccessor>(), _config["EnvironmentName"]));
-            services.AddTransient<IWebConfiguration, WebConfiguration>();
             services.AddTransient<IQnaApiClient>(s => new QnaApiClient(Configuration.QnaApiAuthentication.ApiBaseAddress, s.GetService<ITokenService>(), s.GetService<ILogger<QnaApiClient>>()));
+          
            
+            services.AddDbContext<QnaDataContext>(options => options.UseSqlServer(Configuration.QnaSqlConnectionString));
+            services.AddEntityFrameworkSqlServer();
+            services.AddMediatR(AppDomain.CurrentDomain.Load("SFA.DAS.QnA.Config.Preview.Application"));
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("preview", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "QnA API Config Preview", Version = "0.1" });
+
+                if (_hostingEnvironment.IsDevelopment())
+                {
+                    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                    c.IncludeXmlComments(xmlPath);
+                }
+            });
+            services.BuildServiceProvider();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -96,6 +115,11 @@ namespace SFA.DAS.QnA.Config.Preview.Web
             app.UseRouting();
             app.UseSession();
             app.UseRequestLocalization();
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/preview/swagger.json", "QnA API Config Preview");
+            });
             app.UseHealthChecks("/health");
             app.UseEndpoints(endpoints =>
             {

@@ -17,34 +17,55 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SFA.DAS.QnA.Config.Preview.Web.ViewModels;
 using SFA.DAS.QnA.Config.Preview.Session;
+using System.Net;
+using SFA.DAS.QnA.Config.Preview.Types;
+using SFA.DAS.QnA.Config.Preview.Application.Commands.Projects.UpsertProject;
+using MediatR;
+using SFA.DAS.QnA.Config.Preview.Application.Commands.Workflows.UpsertWorkflow;
+using SFA.DAS.QnA.Config.Preview.Application.Commands.WorkflowSections.UpsertWorkflowSection;
+using SFA.DAS.QnA.Config.Preview.Application.Commands.WorkflowSequences.UpsertWorkflowSequence;
 
 namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
 {
+    /// <summary>
+    /// Main application controller
+    /// </summary>
     public class ApplicationController : Controller
     {
         private readonly ILogger<ApplicationController> _logger;
         private readonly IQnaApiClient _qnaApiClient;
         private readonly ISessionService _sessionService;
+        private readonly IMediator _mediator;
         private const string UserReference = "8477e176-fe4b-4435-94a9-08d75ba10b41";
         private const string OrganisationName = "Preview Organisation";
         private readonly Guid OrganisationId = Guid.NewGuid();
         private const string OrganisationType = "Trade Body";
 
-        public ApplicationController(IQnaApiClient qnaApiClient, ISessionService sessionService,
+        /// <summary>
+        /// Constructor 
+        /// </summary>
+        /// <param name="qnaApiClient"></param>
+        /// <param name="sessionService"></param>
+        /// <param name="mediator"></param>
+        /// <param name="logger"></param>
+        public ApplicationController(IQnaApiClient qnaApiClient, ISessionService sessionService, IMediator mediator,
              ILogger<ApplicationController> logger)
         {
             _logger = logger;
             _sessionService = sessionService;
             _qnaApiClient = qnaApiClient;
+            _mediator = mediator;
         }
 
         [HttpGet("/")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult Index()
         {
             return RedirectToAction("StartApplication", "Application");
         }
 
         [HttpGet("/Application/StartApplication")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult StartApplication()
         {
             var previewViewModel = new PreviewViewModel();
@@ -53,7 +74,66 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
             return View(previewViewModel);
         }
 
+        /// <summary>
+        /// Inject Workflows
+        /// </summary>
+        /// <param name="qnaWorkflows"></param>
+        /// <returns></returns>
+        [HttpPost("/Application/UpsertQnaWorkflows")]
+        [ProducesResponseType((int)HttpStatusCode.Created)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        public async Task<ActionResult> UpsertQnaWorkflows([FromBody] QnaWorkflows qnaWorkflows)
+        {
+            //Todo: Add input validations, better error handling and refactor into a service
+            var projectId = qnaWorkflows?.project?.Id;
+            if (projectId != null)
+            {
+                var upsertProjectRequest = new UpsertProjectRequest(qnaWorkflows.project.Id, qnaWorkflows.project);
+                var projectResponse = await _mediator.Send(upsertProjectRequest);
+                if (projectResponse.Success)
+                {
+                    var upsertWorkflowRequest = new UpsertWorkflowRequest(qnaWorkflows.project.Id, qnaWorkflows.workflow.Id, qnaWorkflows.workflow);
+                    var upsertWorkflowResponse = await _mediator.Send(upsertWorkflowRequest);
+                    if (upsertWorkflowResponse.Success)
+                    {
+                        foreach (var workflowSection in qnaWorkflows.workflowSections)
+                        {
+                            var upsertWorkflowSectionRequest = new UpsertWorkflowSectionRequest(qnaWorkflows.project.Id, workflowSection.Id, workflowSection);
+                            var upsertWorkflowSectionResponse = await _mediator.Send(upsertWorkflowSectionRequest);
+                            if (upsertWorkflowSectionResponse.Success)
+                            {
+                                foreach (var workflowSequence in qnaWorkflows.workflowSequences) { 
+                                    var upsertWorkflowSequenceRequest = new UpsertWorkflowSequenceRequest(qnaWorkflows.workflow.Id, workflowSequence.Id, workflowSequence);
+                                    var upsertWorkflowSequenceResponse = await _mediator.Send(upsertWorkflowSectionRequest);
+                                    if (upsertWorkflowSequenceResponse.Success == false) 
+                                        return BadRequest(new BadRequestError($"Failed to insert sequence {workflowSequence.Id}"));
+                                }
+                            }
+                            else
+                            {
+                                if (upsertWorkflowSectionResponse.Success == false)
+                                    return BadRequest(new BadRequestError($"Failed to insert section {upsertWorkflowSectionRequest.SectionId}"));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (upsertWorkflowResponse.Success == false)
+                            return BadRequest(new BadRequestError($"Failed to insert workflow {upsertWorkflowRequest.WorkflowId}"));
+                    }
+                }
+                else
+                {
+                    if (projectResponse.Success == false)
+                        return BadRequest(new BadRequestError($"Failed to insert project {upsertProjectRequest.ProjectId}"));
+                }
+            }
+
+            return Ok();
+        }
+
         [HttpPost("/Application/StartApplication")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> StartApplication(PreviewViewModel previewViewModel)
         {
             if (!ModelState.IsValid)
@@ -99,6 +179,7 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
         }
 
         [HttpGet("/Application/{Id}/Sequence/{sequenceNo}")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> Sequence(Guid Id, int sequenceNo)
         {
             var sequence = await _qnaApiClient.GetSequenceBySequenceNo(Id, sequenceNo);
@@ -119,6 +200,7 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
         }
 
         [HttpGet("/Application/{Id}/Sequences/{sequenceNo}/Sections/{sectionNo}")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> Section(Guid Id, int sequenceNo, int sectionNo)
         {
             var section = await _qnaApiClient.GetSectionBySectionNo(Id, sequenceNo, sectionNo);
@@ -141,6 +223,7 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
         }
 
         [HttpGet("/Application/{Id}/Sequences/{sequenceNo}/Sections/{sectionNo}/Pages/{pageId}"), ModelStatePersist(ModelStatePersist.RestoreEntry)]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> Page(Guid Id, int sequenceNo, int sectionNo, string pageId, string __redirectAction, string __summaryLink = "Show")
         {
             var sequence = await _qnaApiClient.GetSequenceBySequenceNo(Id, sequenceNo);
@@ -223,6 +306,7 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
         }
 
         [HttpPost("/Application/{Id}/Sequences/{sequenceNo}/Sections/{sectionNo}/Pages/{pageId}/multiple"), ModelStatePersist(ModelStatePersist.Store)]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> SaveMultiplePageAnswers(Guid Id, int sequenceNo, int sectionNo, string pageId, string __redirectAction, string __formAction)
         {
             try
@@ -321,6 +405,7 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
         }
 
         [HttpPost("/Application/{Id}/Sequences/{sequenceNo}/Sections/{sectionNo}/Pages/{pageId}"), ModelStatePersist(ModelStatePersist.Store)]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> SaveAnswers(Guid Id, int sequenceNo, int sectionNo, string pageId, string __redirectAction)
         {
             var updatePageResult = new SetPageAnswersResponse();
@@ -416,6 +501,7 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
         }
 
         [HttpPost("/Application/DeleteAnswer")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> DeleteAnswer(Guid Id, int sequenceNo, int sectionNo, string pageId, Guid answerId, string __redirectAction, string __summaryLink = "False")
         {
 
@@ -433,6 +519,7 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
         }
 
         [HttpGet("Application/{Id}/Section/{sectionId}/Page/{pageId}/Question/{questionId}/{filename}/Download")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> Download(Guid Id, Guid sectionId, string pageId, string questionId, string filename)
         {
             var response = await _qnaApiClient.DownloadFile(Id, sectionId, pageId, questionId, filename);
@@ -444,6 +531,7 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
         }
 
         [HttpGet("Application/{Id}/SequenceNo/{sequenceNo}/Section/{sectionId}/Page/{pageId}/Question/{questionId}/Filename/{filename}/RedirectAction/{__redirectAction}")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> DeleteFile(Guid Id, int sequenceNo, Guid sectionId, string pageId, string questionId, string filename, string __redirectAction)
         {
             var section = await _qnaApiClient.GetSection(Id, sectionId);
@@ -711,10 +799,20 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
 
         }
     }
-
+    /// <summary>
+    /// Bad Request Exception
+    /// </summary>
     public sealed class BadRequestException : Exception
     {
+       /// <summary>
+       /// Constructor
+       /// </summary>
         public BadRequestException() : base("") { }
+        
+        /// <summary>
+        /// Bad Request Exception
+        /// </summary>
+        /// <param name="message"></param>
         public BadRequestException(string message) : base(message) { }
     }
 
