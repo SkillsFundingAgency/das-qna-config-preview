@@ -81,29 +81,19 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
             if (projectId != null)
             {
                 var project = await _qnaApiClient.UpsertProject(qnaWorkflows.project.Id, qnaWorkflows.project);
-                if (project != null)
+                var upsertWorkflow = await _qnaApiClient.UpsertWorkflow(qnaWorkflows.project.Id, qnaWorkflows.workflow.Id, qnaWorkflows.workflow);
+                foreach (var workflowSection in qnaWorkflows.workflowSections)
                 {
-                    var upsertWorkflow = await _qnaApiClient.UpsertWorkflow(qnaWorkflows.project.Id, qnaWorkflows.workflow.Id, qnaWorkflows.workflow);
-                    if (upsertWorkflow != null)
-                    {
-                        foreach (var workflowSection in qnaWorkflows.workflowSections)
-                        {
-                            var upsertWorkflowSection = await _qnaApiClient.UpsertWorkflowSection(qnaWorkflows.project.Id, workflowSection.Id, workflowSection);
-                        }
-                        foreach (var workflowSequence in qnaWorkflows.workflowSequences)
-                        {
-                            await _qnaApiClient.UpsertWorkflowSequence(qnaWorkflows.workflow.Id, workflowSequence.Id, workflowSequence);
-                        }
-                    }
-                    else
-                    {
-                        return BadRequest(new BadRequestError($"Failed to insert workflow { qnaWorkflows.workflow.Id}"));
-                    }
+                    var upsertWorkflowSection = await _qnaApiClient.UpsertWorkflowSection(qnaWorkflows.project.Id, workflowSection.Id, workflowSection);
                 }
-                else
+                foreach (var workflowSequence in qnaWorkflows.workflowSequences)
                 {
-                    return BadRequest(new BadRequestError($"Failed to insert project {qnaWorkflows.project.Id}"));
+                    await _qnaApiClient.UpsertWorkflowSequence(qnaWorkflows.workflow.Id, workflowSequence.Id, workflowSequence);
                 }
+            }
+            else
+            {
+                return BadRequest(new BadRequestError($"Failed to insert project"));
             }
 
             return Ok();
