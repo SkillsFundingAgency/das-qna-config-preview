@@ -76,7 +76,8 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         public async Task<ActionResult> UpsertQnaWorkflows([FromBody] QnaWorkflows qnaWorkflows)
         {
-            //Todo: Add input validations, better error handling and refactor into a service
+            //Todo: Add input validations, better error handling and refactor into a service, mid you the qna always returns a null even when 
+            //the call succeeds.
             var projectId = qnaWorkflows?.project?.Id;
             if (projectId != null)
             {
