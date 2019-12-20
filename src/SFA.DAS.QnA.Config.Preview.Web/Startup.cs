@@ -6,15 +6,12 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.SqlServer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Logging;
 using SFA.DAS.QnA.Config.Preview.Api.Client;
-using SFA.DAS.QnA.Config.Preview.Data;
 using SFA.DAS.QnA.Config.Preview.Session;
 using SFA.DAS.QnA.Config.Preview.Settings;
 using SFA.DAS.QnA.Config.Preview.Web.Extensions;
@@ -79,10 +76,6 @@ namespace SFA.DAS.QnA.Config.Preview.Web
             services.AddSingleton<ISessionService>( s => new SessionService(s.GetService<IHttpContextAccessor>(), _config["EnvironmentName"]));
             services.AddTransient<IQnaApiClient>(s => new QnaApiClient(Configuration.QnaApiAuthentication.ApiBaseAddress, s.GetService<ITokenService>(), s.GetService<ILogger<QnaApiClient>>()));
           
-           
-            services.AddDbContext<QnaDataContext>(options => options.UseSqlServer(Configuration.QnaSqlConnectionString));
-            services.AddEntityFrameworkSqlServer();
-            services.AddMediatR(AppDomain.CurrentDomain.Load("SFA.DAS.QnA.Config.Preview.Application"));
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("preview", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "QnA API Config Preview", Version = "0.1" });

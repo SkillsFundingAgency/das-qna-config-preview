@@ -19,11 +19,6 @@ using SFA.DAS.QnA.Config.Preview.Web.ViewModels;
 using SFA.DAS.QnA.Config.Preview.Session;
 using System.Net;
 using SFA.DAS.QnA.Config.Preview.Types;
-using SFA.DAS.QnA.Config.Preview.Application.Commands.Projects.UpsertProject;
-using MediatR;
-using SFA.DAS.QnA.Config.Preview.Application.Commands.Workflows.UpsertWorkflow;
-using SFA.DAS.QnA.Config.Preview.Application.Commands.WorkflowSections.UpsertWorkflowSection;
-using SFA.DAS.QnA.Config.Preview.Application.Commands.WorkflowSequences.UpsertWorkflowSequence;
 
 namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
 {
@@ -35,7 +30,6 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
         private readonly ILogger<ApplicationController> _logger;
         private readonly IQnaApiClient _qnaApiClient;
         private readonly ISessionService _sessionService;
-        private readonly IMediator _mediator;
         private const string UserReference = "8477e176-fe4b-4435-94a9-08d75ba10b41";
         private const string OrganisationName = "Preview Organisation";
         private readonly Guid OrganisationId = Guid.NewGuid();
@@ -46,15 +40,13 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
         /// </summary>
         /// <param name="qnaApiClient"></param>
         /// <param name="sessionService"></param>
-        /// <param name="mediator"></param>
         /// <param name="logger"></param>
-        public ApplicationController(IQnaApiClient qnaApiClient, ISessionService sessionService, IMediator mediator,
+        public ApplicationController(IQnaApiClient qnaApiClient, ISessionService sessionService,
              ILogger<ApplicationController> logger)
         {
             _logger = logger;
             _sessionService = sessionService;
             _qnaApiClient = qnaApiClient;
-            _mediator = mediator;
         }
 
         [HttpGet("/")]
@@ -88,44 +80,29 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
             var projectId = qnaWorkflows?.project?.Id;
             if (projectId != null)
             {
-                var upsertProjectRequest = new UpsertProjectRequest(qnaWorkflows.project.Id, qnaWorkflows.project);
-                var projectResponse = await _mediator.Send(upsertProjectRequest);
-                if (projectResponse.Success)
+                var project = await _qnaApiClient.UpsertProject(qnaWorkflows.project.Id, qnaWorkflows.project);
+                if (project != null)
                 {
-                    var upsertWorkflowRequest = new UpsertWorkflowRequest(qnaWorkflows.project.Id, qnaWorkflows.workflow.Id, qnaWorkflows.workflow);
-                    var upsertWorkflowResponse = await _mediator.Send(upsertWorkflowRequest);
-                    if (upsertWorkflowResponse.Success)
+                    var upsertWorkflow = await _qnaApiClient.UpsertWorkflow(qnaWorkflows.project.Id, qnaWorkflows.workflow.Id, qnaWorkflows.workflow);
+                    if (upsertWorkflow != null)
                     {
                         foreach (var workflowSection in qnaWorkflows.workflowSections)
                         {
-                            var upsertWorkflowSectionRequest = new UpsertWorkflowSectionRequest(qnaWorkflows.project.Id, workflowSection.Id, workflowSection);
-                            var upsertWorkflowSectionResponse = await _mediator.Send(upsertWorkflowSectionRequest);
-                            if (upsertWorkflowSectionResponse.Success)
-                            {
-                                foreach (var workflowSequence in qnaWorkflows.workflowSequences) { 
-                                    var upsertWorkflowSequenceRequest = new UpsertWorkflowSequenceRequest(qnaWorkflows.workflow.Id, workflowSequence.Id, workflowSequence);
-                                    var upsertWorkflowSequenceResponse = await _mediator.Send(upsertWorkflowSectionRequest);
-                                    if (upsertWorkflowSequenceResponse.Success == false) 
-                                        return BadRequest(new BadRequestError($"Failed to insert sequence {workflowSequence.Id}"));
-                                }
-                            }
-                            else
-                            {
-                                if (upsertWorkflowSectionResponse.Success == false)
-                                    return BadRequest(new BadRequestError($"Failed to insert section {upsertWorkflowSectionRequest.SectionId}"));
-                            }
+                            var upsertWorkflowSection = await _qnaApiClient.UpsertWorkflowSection(qnaWorkflows.project.Id, workflowSection.Id, workflowSection);
+                        }
+                        foreach (var workflowSequence in qnaWorkflows.workflowSequences)
+                        {
+                            await _qnaApiClient.UpsertWorkflowSequence(qnaWorkflows.workflow.Id, workflowSequence.Id, workflowSequence);
                         }
                     }
                     else
                     {
-                        if (upsertWorkflowResponse.Success == false)
-                            return BadRequest(new BadRequestError($"Failed to insert workflow {upsertWorkflowRequest.WorkflowId}"));
+                        return BadRequest(new BadRequestError($"Failed to insert workflow { qnaWorkflows.workflow.Id}"));
                     }
                 }
                 else
                 {
-                    if (projectResponse.Success == false)
-                        return BadRequest(new BadRequestError($"Failed to insert project {upsertProjectRequest.ProjectId}"));
+                    return BadRequest(new BadRequestError($"Failed to insert project {qnaWorkflows.project.Id}"));
                 }
             }
 

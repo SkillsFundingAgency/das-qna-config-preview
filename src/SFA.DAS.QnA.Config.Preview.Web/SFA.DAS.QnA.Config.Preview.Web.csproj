@@ -19,17 +19,10 @@
     <PackageReference Include="BuildBundlerMinifier" Version="3.2.435" />
     <PackageReference Include="BundlerMinifier.Core" Version="3.2.435" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="8.6.0" />
-    <PackageReference Include="MediatR" Version="7.0.0" />
     <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="7.0.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.12.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.NLogTarget" Version="2.12.0" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
     <PackageReference Include="Microsoft.IdentityModel.Logging" Version="5.6.0" />
     <PackageReference Include="NLog.Extensions.Logging" Version="1.6.1" />
@@ -42,9 +35,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SFA.DAS.QnA.Config.Preview.Api.Client\SFA.DAS.QnA.Config.Preview.Api.Client.csproj" />
-    <ProjectReference Include="..\SFA.DAS.QnA.Config.Preview.Application\SFA.DAS.QnA.Config.Preview.Application.csproj" />
     <ProjectReference Include="..\SFA.DAS.QnA.Config.Preview.ApplyTypes\SFA.DAS.QnA.Config.Preview.Types.csproj" />
-    <ProjectReference Include="..\SFA.DAS.QnA.Config.Preview.Data\SFA.DAS.QnA.Config.Preview.Data.csproj" />
     <ProjectReference Include="..\SFA.DAS.QnA.Config.Preview.Session\SFA.DAS.QnA.Config.Preview.Session.csproj" />
     <ProjectReference Include="..\SFA.DAS.QnA.Config.Preview.Settings\SFA.DAS.QnA.Config.Preview.Settings.csproj" />
   </ItemGroup>

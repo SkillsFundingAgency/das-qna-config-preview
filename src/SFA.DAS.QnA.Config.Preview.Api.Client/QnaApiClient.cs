@@ -198,6 +198,8 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
             }
         }
 
+
+
         public async Task<SetPageAnswersResponse> Upload(Guid applicationId, Guid sectionId, string pageId, IFormFileCollection files)
         {
             using (var request = new HttpRequestMessage(HttpMethod.Post, $"/applications/{applicationId}/sections/{sectionId}/pages/{pageId}/upload"))
@@ -212,6 +214,38 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
                 JsonSerializerSettings settings = new JsonSerializerSettings();
                 settings.Converters.Add(new SetResultConverter());
                 return await PostRequestWithFileAndResponse<SetPageAnswersResponse>(request, formDataContent, settings);
+            }
+        }
+
+        public async Task<Project> UpsertProject(Guid projectId, Project project)
+        {
+            using (var request = new HttpRequestMessage(HttpMethod.Put, $"/config/projects/{projectId}"))
+            {
+                return await PostPutRequestWithResponse<Project, Project>(request, project);
+            }
+        }
+
+        public async Task<Workflow> UpsertWorkflow(Guid projectId, Guid workflowId, Workflow workflow)
+        {
+            using (var request = new HttpRequestMessage(HttpMethod.Put, $"/config/projects/{projectId}/workflows/{workflowId}"))
+            {
+                return await PostPutRequestWithResponse<Workflow, Workflow>(request, workflow);
+            }
+        }
+
+        public async Task<WorkflowSection> UpsertWorkflowSection(Guid projectId, Guid sectionId,  WorkflowSection section)
+        {
+            using (var request = new HttpRequestMessage(HttpMethod.Put, $"/config/projects/{projectId}/sections/{sectionId}"))
+            {
+                return await PostPutRequestWithResponse<WorkflowSection, WorkflowSection>(request, section);
+            }
+        }
+
+         public async Task<WorkflowSequence> UpsertWorkflowSequence(Guid workflowId, Guid sequenceId, WorkflowSequence sequence)
+        {
+            using (var request = new HttpRequestMessage(HttpMethod.Put, $"/config/workflows/{workflowId}/sequences/{sequenceId}"))
+            {
+                return await PostPutRequestWithResponse<WorkflowSequence, WorkflowSequence>(request, sequence);
             }
         }
 

@@ -9,13 +9,12 @@
             Main application controller
             </summary>
         </member>
-        <member name="M:SFA.DAS.QnA.Config.Preview.Web.Controllers.ApplicationController.#ctor(SFA.DAS.QnA.Config.Preview.Api.Client.IQnaApiClient,SFA.DAS.QnA.Config.Preview.Session.ISessionService,MediatR.IMediator,Microsoft.Extensions.Logging.ILogger{SFA.DAS.QnA.Config.Preview.Web.Controllers.ApplicationController})">
+        <member name="M:SFA.DAS.QnA.Config.Preview.Web.Controllers.ApplicationController.#ctor(SFA.DAS.QnA.Config.Preview.Api.Client.IQnaApiClient,SFA.DAS.QnA.Config.Preview.Session.ISessionService,Microsoft.Extensions.Logging.ILogger{SFA.DAS.QnA.Config.Preview.Web.Controllers.ApplicationController})">
             <summary>
             Constructor 
             </summary>
             <param name="qnaApiClient"></param>
             <param name="sessionService"></param>
-            <param name="mediator"></param>
             <param name="logger"></param>
         </member>
         <member name="M:SFA.DAS.QnA.Config.Preview.Web.Controllers.ApplicationController.UpsertQnaWorkflows(SFA.DAS.QnA.Config.Preview.Types.QnaWorkflows)">
