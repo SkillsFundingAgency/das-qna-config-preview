@@ -62,11 +62,11 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Validators
                     var obj = JToken.Parse(strJson);
                     return true;
                 }
-                catch (JsonReaderException jex)
+                catch (JsonReaderException)
                 {
                     return false;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return false;
                 }

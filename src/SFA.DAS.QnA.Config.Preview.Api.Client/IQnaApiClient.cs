@@ -32,5 +32,9 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
         Task<bool> AllFeedbackCompleted(Guid applicationId, Guid sequenceId);
         Task<List<Project>> GetProjects();
         Task<List<Workflow>> GetWorkflows(Guid projectId);
+        Task<Project> UpsertProject(Guid projectId, Project project);
+        Task<Workflow> UpsertWorkflow(Guid projectId, Guid workflowId, Workflow workflow);
+        Task<WorkflowSection> UpsertWorkflowSection(Guid projectId, Guid sectionId, WorkflowSection section);
+        Task<WorkflowSequence> UpsertWorkflowSequence(Guid workflowId, Guid sequenceId, WorkflowSequence sequence);
     }
 }

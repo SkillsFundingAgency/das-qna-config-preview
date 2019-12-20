@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SFA.DAS.QnA.Config.Preview.Web</name>
+    </assembly>
+    <members>
+        <member name="T:SFA.DAS.QnA.Config.Preview.Web.Controllers.ApplicationController">
+            <summary>
+            Main application controller
+            </summary>
+        </member>
+        <member name="M:SFA.DAS.QnA.Config.Preview.Web.Controllers.ApplicationController.#ctor(SFA.DAS.QnA.Config.Preview.Api.Client.IQnaApiClient,SFA.DAS.QnA.Config.Preview.Session.ISessionService,Microsoft.Extensions.Logging.ILogger{SFA.DAS.QnA.Config.Preview.Web.Controllers.ApplicationController})">
+            <summary>
+            Constructor 
+            </summary>
+            <param name="qnaApiClient"></param>
+            <param name="sessionService"></param>
+            <param name="logger"></param>
+        </member>
+        <member name="M:SFA.DAS.QnA.Config.Preview.Web.Controllers.ApplicationController.UpsertQnaWorkflows(SFA.DAS.QnA.Config.Preview.Types.QnaWorkflows)">
+            <summary>
+            Inject Workflows
+            </summary>
+            <param name="qnaWorkflows"></param>
+            <returns></returns>
+        </member>
+        <member name="T:SFA.DAS.QnA.Config.Preview.Web.Controllers.BadRequestException">
+            <summary>
+            Bad Request Exception
+            </summary>
+        </member>
+        <member name="M:SFA.DAS.QnA.Config.Preview.Web.Controllers.BadRequestException.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:SFA.DAS.QnA.Config.Preview.Web.Controllers.BadRequestException.#ctor(System.String)">
+            <summary>
+            Bad Request Exception
+            </summary>
+            <param name="message"></param>
+        </member>
+    </members>
+</doc>
