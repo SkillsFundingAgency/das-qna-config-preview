@@ -682,15 +682,12 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
                 // Get a list of values which would show FutherQuestions
                 var valuesThatShowFurtherQuestions = questionWithFutherQuestions.Input.Options.Where(o => o.FurtherQuestions != null && o.FurtherQuestions.Any()).Select(opt => opt.Value).ToList();
 
-                // If supplied answer results in no FutherQuestions being shown then remove those that have slipped in. This is because the HTML Posts all form inputs to us.
+                // If supplied answer results in no FutherQuestions being shown then make sure those which are part of FurtherQuestions are set to empty. This is because the HTML Posts all form inputs to us.
                 if (!answers.Any(a => a.QuestionId == questionIdContainingFutherQuestions && valuesThatShowFurtherQuestions.Contains(a.Value)))
                 {
-                    for (int i = answers.Count - 1; i >= 0; i--)
+                    foreach (var answer in answers.Where(y => y.QuestionId.Contains(questionIdContainingFutherQuestions + ".")))
                     {
-                        if (answers[i].QuestionId.Contains(questionIdContainingFutherQuestions + "."))
-                        {
-                            answers.RemoveAt(i);
-                        }
+                        answer.Value = "";
                     }
                 }
             }
