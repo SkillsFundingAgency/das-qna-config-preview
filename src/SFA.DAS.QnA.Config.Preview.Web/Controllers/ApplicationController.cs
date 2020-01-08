@@ -663,7 +663,30 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
         {
             List<Answer> answers = new List<Answer>();
 
-            var questionId = page.Questions.Where(x => x.Input.Type == "ComplexRadio" || x.Input.Type == "Radio").Select(y => y.QuestionId).FirstOrDefault();
+            #region FurtherQuestion_Processing
+            // Get the first Question that has FutherQuestions
+            var questionWithFutherQuestions = page.Questions.Where(x => x.Input.Type == "ComplexRadio" && x.Input.Options != null && x.Input.Options.Any(o => o.FurtherQuestions.Any())).FirstOrDefault();
+
+            if (questionWithFutherQuestions != null)
+            {
+                var questionIdContainingFutherQuestions = questionWithFutherQuestions.QuestionId;
+
+                // Get a list of values which would show FutherQuestions
+                var valuesThatShowFurtherQuestions = questionWithFutherQuestions.Input.Options.Where(o => o.FurtherQuestions != null && o.FurtherQuestions.Any()).Select(opt => opt.Value).ToList();
+
+                // If supplied answer results in no FutherQuestions being shown then remove those that have slipped in. This is because the HTML Posts all form inputs to us.
+                if (!answers.Any(a => a.QuestionId == questionIdContainingFutherQuestions && valuesThatShowFurtherQuestions.Contains(a.Value)))
+                {
+                    for (int i = answers.Count - 1; i >= 0; i--)
+                    {
+                        if (answers[i].QuestionId.Contains(questionIdContainingFutherQuestions + "."))
+                        {
+                            answers.RemoveAt(i);
+                        }
+                    }
+                }
+            }
+            # endregion FurtherQuestion_Processing
 
             foreach (var keyValuePair in HttpContext.Request.Form.Where(f => !f.Key.StartsWith("__")))
             {
@@ -672,6 +695,8 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
                     answers.Add(new Answer() { QuestionId = keyValuePair.Key, Value = keyValuePair.Value });
                 }
             }
+
+            var questionId = page.Questions.Where(x => x.Input.Type == "ComplexRadio" || x.Input.Type == "Radio").Select(y => y.QuestionId).FirstOrDefault();
 
             if (!answers.Any() && !string.IsNullOrEmpty(questionId))
             {
