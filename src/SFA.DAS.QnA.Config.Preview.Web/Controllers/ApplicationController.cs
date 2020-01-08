@@ -663,6 +663,14 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
         {
             List<Answer> answers = new List<Answer>();
 
+            foreach (var keyValuePair in HttpContext.Request.Form.Where(f => !f.Key.StartsWith("__")))
+            {
+                if (!keyValuePair.Key.EndsWith("Search"))
+                {
+                    answers.Add(new Answer() { QuestionId = keyValuePair.Key, Value = keyValuePair.Value });
+                }
+            }
+
             #region FurtherQuestion_Processing
             // Get the first Question that has FutherQuestions
             var questionWithFutherQuestions = page.Questions.Where(x => x.Input.Type == "ComplexRadio" && x.Input.Options != null && x.Input.Options.Any(o => o.FurtherQuestions.Any())).FirstOrDefault();
@@ -687,14 +695,6 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
                 }
             }
             # endregion FurtherQuestion_Processing
-
-            foreach (var keyValuePair in HttpContext.Request.Form.Where(f => !f.Key.StartsWith("__")))
-            {
-                if (!keyValuePair.Key.EndsWith("Search"))
-                {
-                    answers.Add(new Answer() { QuestionId = keyValuePair.Key, Value = keyValuePair.Value });
-                }
-            }
 
             var questionId = page.Questions.Where(x => x.Input.Type == "ComplexRadio" || x.Input.Type == "Radio").Select(y => y.QuestionId).FirstOrDefault();
 
