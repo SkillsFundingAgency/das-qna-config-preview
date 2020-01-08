@@ -12,6 +12,8 @@ namespace SFA.DAS.QnA.Config.Preview.Web.ViewModels.Apply
         public string QuestionBodyText { get; set; }
         public string Hint { get; set; }
         public string InputClasses { get; set; }
+        public string InputPrefix { get; set; }
+        public string InputSuffix { get; set; }
         public string Value { get; set; }
         public dynamic JsonValue { get; set; }
         public List<Option> Options { get; set; }
