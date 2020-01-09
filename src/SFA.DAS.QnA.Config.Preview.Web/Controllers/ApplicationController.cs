@@ -672,52 +672,49 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
             }
 
             #region FurtherQuestion_Processing
-            // Get the first Question that has FutherQuestions
-            var questionWithFutherQuestions = page.Questions.Where(x => x.Input.Type == "ComplexRadio" && x.Input.Options != null && x.Input.Options.Any(o => o.FurtherQuestions.Any())).FirstOrDefault();
+            // Get all questions that have FurtherQuestions in a ComplexRadio
+            var questionsWithFutherQuestions = page.Questions.Where(x => x.Input.Type == "ComplexRadio" && x.Input.Options != null && x.Input.Options.Any(o => o.FurtherQuestions.Any()));
 
-            if (questionWithFutherQuestions != null)
+            foreach (var question in questionsWithFutherQuestions)
             {
-                var questionIdContainingFutherQuestions = questionWithFutherQuestions.QuestionId;
+                var answerForQuestion = answers.FirstOrDefault(a => a.QuestionId == question.QuestionId);
 
-                // Get a list of values which would show FutherQuestions
-                var valuesThatShowFurtherQuestions = questionWithFutherQuestions.Input.Options.Where(o => o.FurtherQuestions != null && o.FurtherQuestions.Any()).Select(opt => opt.Value).ToList();
-
-                // If supplied answer results in no FutherQuestions being shown then make sure those which are part of FurtherQuestions are set to empty. This is because the HTML Posts all form inputs to us.
-                if (!answers.Any(a => a.QuestionId == questionIdContainingFutherQuestions && valuesThatShowFurtherQuestions.Contains(a.Value)))
+                // Remove FurtherQuestion answers to all other Options as they were not selected and thus should not be stored
+                foreach (var furtherQuestion in question.Input.Options.Where(opt => opt.Value != answerForQuestion?.Value && opt.FurtherQuestions != null).SelectMany(opt => opt.FurtherQuestions))
                 {
-                    foreach (var answer in answers.Where(y => y.QuestionId.Contains(questionIdContainingFutherQuestions + ".")))
+                    foreach (var answer in answers.Where(a => a.QuestionId == furtherQuestion.QuestionId))
                     {
-                        answer.Value = "";
+                        answer.Value = string.Empty;
                     }
                 }
             }
-            # endregion FurtherQuestion_Processing
+            #endregion FurtherQuestion_Processing
 
-            var questionId = page.Questions.Where(x => x.Input.Type == "ComplexRadio" || x.Input.Type == "Radio").Select(y => y.QuestionId).FirstOrDefault();
+            //var questionId = page.Questions.Where(x => x.Input.Type == "ComplexRadio" || x.Input.Type == "Radio").Select(y => y.QuestionId).FirstOrDefault();
 
-            if (!answers.Any() && !string.IsNullOrEmpty(questionId))
-            {
-                answers.Add(new Answer { QuestionId = questionId, Value = "" });
-            }
-            else if (questionId != null && answers.Any(y => y.QuestionId.Contains(questionId)))
-            {
-                if (answers.All(x => x.Value == "" || Regex.IsMatch(x.Value, "^[,]+$")))
-                {
-                    foreach (var answer in answers.Where(y => y.QuestionId.Contains(questionId + ".") && (y.Value == "" || Regex.IsMatch(y.Value, "^[,]+$"))))
-                    {
-                        answer.QuestionId = questionId;
-                        break;
-                    }
-                }
-                else if (answers.Count(y => y.QuestionId.Contains(questionId) && (y.Value == "" || Regex.IsMatch(y.Value, "^[,]+$"))) == 1
-                    && answers.Count(y => y.QuestionId == questionId && y.Value != "") == 0)
-                {
-                    foreach (var answer in answers.Where(y => y.QuestionId.Contains(questionId + ".") && (y.Value == "" || Regex.IsMatch(y.Value, "^[,]+$"))))
-                    {
-                        answer.QuestionId = questionId;
-                    }
-                }
-            }
+            //if (!answers.Any() && !string.IsNullOrEmpty(questionId))
+            //{
+            //    answers.Add(new Answer { QuestionId = questionId, Value = "" });
+            //}
+            //else if (questionId != null && answers.Any(y => y.QuestionId.Contains(questionId)))
+            //{
+            //    if (answers.All(x => x.Value == "" || Regex.IsMatch(x.Value, "^[,]+$")))
+            //    {
+            //        foreach (var answer in answers.Where(y => y.QuestionId.Contains(questionId + ".") && (y.Value == "" || Regex.IsMatch(y.Value, "^[,]+$"))))
+            //        {
+            //            answer.QuestionId = questionId;
+            //            break;
+            //        }
+            //    }
+            //    else if (answers.Count(y => y.QuestionId.Contains(questionId) && (y.Value == "" || Regex.IsMatch(y.Value, "^[,]+$"))) == 1
+            //        && answers.Count(y => y.QuestionId == questionId && y.Value != "") == 0)
+            //    {
+            //        foreach (var answer in answers.Where(y => y.QuestionId.Contains(questionId + ".") && (y.Value == "" || Regex.IsMatch(y.Value, "^[,]+$"))))
+            //        {
+            //            answer.QuestionId = questionId;
+            //        }
+            //    }
+            //}
 
             if (page.Questions.Any(x => x.Input.Type == "Address"))
                 return ProcessPageVmQuestionsForAddress(page, answers);
