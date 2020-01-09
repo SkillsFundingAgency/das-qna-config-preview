@@ -663,11 +663,22 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
         {
             List<Answer> answers = new List<Answer>();
 
+            // Add answers from the Form post
             foreach (var keyValuePair in HttpContext.Request.Form.Where(f => !f.Key.StartsWith("__")))
             {
                 if (!keyValuePair.Key.EndsWith("Search"))
                 {
                     answers.Add(new Answer() { QuestionId = keyValuePair.Key, Value = keyValuePair.Value });
+                }
+            }
+
+            // Check if any Page Question is missing and add the default answer
+            foreach(var questionId in page.Questions.Select(q => q.QuestionId))
+            {
+                if(!answers.Any(a => a.QuestionId == questionId))
+                {
+                    // Add default answer if it's missing
+                    answers.Add(new Answer { QuestionId = questionId, Value = string.Empty });
                 }
             }
 
@@ -690,34 +701,11 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
             }
             #endregion FurtherQuestion_Processing
 
-            //var questionId = page.Questions.Where(x => x.Input.Type == "ComplexRadio" || x.Input.Type == "Radio").Select(y => y.QuestionId).FirstOrDefault();
-
-            //if (!answers.Any() && !string.IsNullOrEmpty(questionId))
-            //{
-            //    answers.Add(new Answer { QuestionId = questionId, Value = "" });
-            //}
-            //else if (questionId != null && answers.Any(y => y.QuestionId.Contains(questionId)))
-            //{
-            //    if (answers.All(x => x.Value == "" || Regex.IsMatch(x.Value, "^[,]+$")))
-            //    {
-            //        foreach (var answer in answers.Where(y => y.QuestionId.Contains(questionId + ".") && (y.Value == "" || Regex.IsMatch(y.Value, "^[,]+$"))))
-            //        {
-            //            answer.QuestionId = questionId;
-            //            break;
-            //        }
-            //    }
-            //    else if (answers.Count(y => y.QuestionId.Contains(questionId) && (y.Value == "" || Regex.IsMatch(y.Value, "^[,]+$"))) == 1
-            //        && answers.Count(y => y.QuestionId == questionId && y.Value != "") == 0)
-            //    {
-            //        foreach (var answer in answers.Where(y => y.QuestionId.Contains(questionId + ".") && (y.Value == "" || Regex.IsMatch(y.Value, "^[,]+$"))))
-            //        {
-            //            answer.QuestionId = questionId;
-            //        }
-            //    }
-            //}
-
+            // Address inputs require special processing
             if (page.Questions.Any(x => x.Input.Type == "Address"))
-                return ProcessPageVmQuestionsForAddress(page, answers);
+            {
+                answers = ProcessPageVmQuestionsForAddress(page, answers);
+            }
 
             return answers;
         }
