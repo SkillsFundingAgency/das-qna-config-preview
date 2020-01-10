@@ -13,7 +13,7 @@
     <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="5.2.5" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="Polly" Version="7.2.0" />
-    <PackageReference Include="SFA.DAS.QnA.Api.Types" Version="0.2.151" />
+    <PackageReference Include="SFA.DAS.QnA.Api.Types" Version="0.2.152" />
   </ItemGroup>
 
   <ItemGroup>
