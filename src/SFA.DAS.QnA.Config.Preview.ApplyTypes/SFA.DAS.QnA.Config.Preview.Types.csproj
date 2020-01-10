@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SFA.DAS.QnA.Api.Types" Version="0.2.150" />
+    <PackageReference Include="SFA.DAS.QnA.Api.Types" Version="0.2.151" />
   </ItemGroup>
 
 </Project>
