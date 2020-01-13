@@ -13,50 +13,47 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Infrastructure
     {
         public static bool FileValidationPassed(List<Answer> answers, Page page, List<ValidationErrorDetail> errorMessages, ModelStateDictionary modelState, IFormFileCollection files)
         {
-            ValidationDefinition typeValidation = null;
             var fileValidationPassed = true;
 
-            if (answers != null && answers.Any() && string.IsNullOrEmpty(answers[0]?.Value))
+            if (answers != null)
             {
-                typeValidation = page.Questions.FirstOrDefault(q => q.QuestionId == answers[0].QuestionId)?.Input.Validations.FirstOrDefault(v => v.Name == "Required");
-                if (typeValidation != null)
+                foreach (var fileAnswer in answers)
                 {
-                    modelState.AddModelError(answers[0].QuestionId, typeValidation.ErrorMessage);
-                    errorMessages.Add(new ValidationErrorDetail(answers[0].QuestionId, typeValidation.ErrorMessage));
-                    fileValidationPassed = false;
-                }
-            }
-            foreach (var file in files)
-            {
-
-                typeValidation = page.Questions.FirstOrDefault(q => q.QuestionId == file.Name)?.Input.Validations.FirstOrDefault(v => v.Name == "FileType");
-                if (typeValidation != null)
-                {
-                    if (file.Length > 0)
+                    // Check if it's a required answer
+                    var typeValidation = page.Questions.FirstOrDefault(q => q.QuestionId == fileAnswer.QuestionId)?.Input.Validations.FirstOrDefault(v => v.Name == "Required");
+                    if (typeValidation != null && string.IsNullOrWhiteSpace(fileAnswer.Value))
                     {
-                        var size = (file.Length / 1024f) / 1024f;
-                        if (size > 5d)
-                        {
-                            modelState.AddModelError(file.Name, "The PDF file must be smaller than 5MB.");
-                            errorMessages.Add(new ValidationErrorDetail(file.Name, "The PDF file must be smaller than 5MB."));
-                            fileValidationPassed = false;
-                        }
-                        else
-                        {
-                            // Only add to answers if type validation passes.
-                            answers.Add(new Answer() { QuestionId = file.Name, Value = file.FileName });
-                        }
+                        modelState.AddModelError(answers[0].QuestionId, typeValidation.ErrorMessage);
+                        errorMessages.Add(new ValidationErrorDetail(answers[0].QuestionId, typeValidation.ErrorMessage));
+                        fileValidationPassed = false;
                     }
                 }
-                else
+            }
+
+            if (files != null)
+            {
+                foreach (var file in files)
                 {
-                    // Only add to answers if type validation passes.
-                    answers.Add(new Answer() { QuestionId = file.Name, Value = file.FileName });
+                    // Check if needs to be smaller than 5MB
+                    var typeValidation = page.Questions.FirstOrDefault(q => q.QuestionId == file.Name)?.Input.Validations.FirstOrDefault(v => v.Name == "FileType");
+                    if (typeValidation != null)
+                    {
+                        if (file.Length > 0)
+                        {
+                            var size = (file.Length / 1024f) / 1024f;
+                            if (size > 5d)
+                            {
+                                fileValidationPassed = false;
+
+                                modelState.AddModelError(file.Name, "The PDF file must be smaller than 5MB.");
+                                errorMessages.Add(new ValidationErrorDetail(file.Name, "The PDF file must be smaller than 5MB."));                           
+                            }
+                        }
+                    }
                 }
             }
 
             return fileValidationPassed;
         }
-
     }
 }
