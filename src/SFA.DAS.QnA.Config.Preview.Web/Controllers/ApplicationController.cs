@@ -347,11 +347,6 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
                         }
                     }
 
-                    if (!page.PageOfAnswers.Any())
-                    {
-                        page.PageOfAnswers = new List<PageOfAnswers>() { new PageOfAnswers() { Answers = new List<Answer>() } };
-                    }
-
                     page = StoreEnteredAnswers(answers, page);
 
                     SetResponseValidationErrors(pageAddResponse?.ValidationErrors, page);
@@ -376,32 +371,35 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> SaveAnswers(Guid Id, int sequenceNo, int sectionNo, string pageId, string __redirectAction)
         {
-            var updatePageResult = new SetPageAnswersResponse();
-
             try
-            {
+            {  
+                var updatePageResult = default(SetPageAnswersResponse);
+
                 string __summaryLink = HttpContext.Request.Form["__summaryLink"];
                 var page = await _qnaApiClient.GetPageBySectionNo(Id, sequenceNo, sectionNo, pageId);
-                var fileupload = page.Questions?.Any(q => q.Input.Type == "FileUpload");
-                var answers = GetAnswersFromForm(page);
+                var isFileUploadPage = page.Questions?.Any(q => q.Input.Type == "FileUpload");
+                
+                var answers = new List<Answer>();
 
-
-                if (HttpContext.Request.Form.Files.Count == 0 && fileupload == false)
+                // NOTE: QnA API stipulates that a Page cannot contain a mixture of FileUploads and other Question Types
+                if (isFileUploadPage == false)
                 {
+                    answers = GetAnswersFromForm(page);
+
                     if (__redirectAction == "Feedback" && !HasAtLeastOneAnswerChanged(page, answers) && !page.AllFeedbackIsCompleted)
                         SetAnswerNotUpdated(page);
                     else
-                        updatePageResult = await _qnaApiClient.AddPageAnswer(Id, page.SectionId.Value, page.PageId, answers);
+                        updatePageResult = await _qnaApiClient.SetPageAnswers(Id, page.SectionId.Value, page.PageId, answers);
                 }
-
-
-                if (fileupload == true)
+                else if (isFileUploadPage == true)
                 {
-                    updatePageResult = new SetPageAnswersResponse();
                     var errorMessages = new List<ValidationErrorDetail>();
-                    if (HttpContext.Request.Form.Files.Count == 0 && NothingToUpload(updatePageResult, answers))
-                    {
 
+                    answers = GetAnswersFromFiles();
+
+                    if (answers.Count < 1)
+                    {
+                        // Nothing to upload
                         if (__redirectAction == "Feedback")
                         {
                             if (page.HasFeedback && page.HasNewFeedback && !page.AllFeedbackIsCompleted)
@@ -409,13 +407,14 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
                                 SetAnswerNotUpdated(page);
                                 return RedirectToAction("Page", new { Id, sequenceNo, sectionNo, pageId, __redirectAction, __summaryLink });
                             }
-                            if (FileValidator.FileValidationPassed(answers, page, errorMessages, ModelState, HttpContext.Request.Form.Files))
+                            else if (FileValidator.FileValidationPassed(answers, page, errorMessages, ModelState, HttpContext.Request.Form.Files))
+                            {
                                 return RedirectToAction("Feedback", new { Id });
+                            }
                         }
-                        else
+                        else if (FileValidator.FileValidationPassed(answers, page, errorMessages, ModelState, HttpContext.Request.Form.Files))
                         {
-                            if (FileValidator.FileValidationPassed(answers, page, errorMessages, ModelState, HttpContext.Request.Form.Files))
-                                return ForwardToNextSectionOrPage(page, Id, sequenceNo, sectionNo, __redirectAction);
+                            return ForwardToNextSectionOrPage(page, Id, sequenceNo, sectionNo, __redirectAction);
                         }
                     }
                     else
@@ -446,12 +445,10 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
                         return RedirectToNextAction(Id, sequenceNo, sectionNo, __redirectAction, updatePageResult.NextAction, updatePageResult.NextActionId);
                 }
 
-                if (!page.PageOfAnswers.Any())
+                if (isFileUploadPage != true)
                 {
-                    page.PageOfAnswers = new List<PageOfAnswers>() { new PageOfAnswers() { Answers = new List<Answer>() } };
+                    page = StoreEnteredAnswers(answers, page);
                 }
-
-                page = StoreEnteredAnswers(answers, page);
 
                 SetResponseValidationErrors(updatePageResult?.ValidationErrors, page);
 
@@ -593,12 +590,6 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
             return atLeastOneAnswerChanged;
         }
 
-        private static bool NothingToUpload(SetPageAnswersResponse updatePageResult, List<Answer> answers)
-        {
-            return updatePageResult.ValidationErrors == null && !updatePageResult.ValidationPassed
-                    && answers.Count > 0;
-        }
-
         private RedirectToActionResult ForwardToNextSectionOrPage(Page page, Guid Id, int sequenceNo, int sectionNo, string __redirectAction)
         {
             var next = page.Next.FirstOrDefault(x => x.Action == "NextPage");
@@ -611,8 +602,15 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
 
         private static Page StoreEnteredAnswers(List<Answer> answers, Page page)
         {
-            if (answers != null && answers.Any() && page.PageOfAnswers != null)
+            if (answers != null && answers.Any())
+            {
+                if (page.PageOfAnswers is null || !page.PageOfAnswers.Any())
+                {
+                    page.PageOfAnswers = new List<PageOfAnswers> { new PageOfAnswers { Answers = new List<Answer>() } };
+                }
+
                 page.PageOfAnswers.Add(new PageOfAnswers { Answers = answers });
+            }
 
             return page;
         }
@@ -710,6 +708,22 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
             return answers;
         }
 
+        private List<Answer> GetAnswersFromFiles()
+        {
+            List<Answer> answers = new List<Answer>();
+
+            // Add answers from the Files sent within the Form post
+            if (HttpContext.Request.Form.Files != null)
+            {   
+                foreach (var file in HttpContext.Request.Form.Files)
+                {
+                    answers.Add(new Answer() { QuestionId = file.Name, Value = file.FileName });
+                }
+
+            }
+
+            return answers;
+        }
 
         private static List<Answer> ProcessPageVmQuestionsForAddress(Page page, List<Answer> answers)
         {
