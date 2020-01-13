@@ -46,7 +46,7 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Infrastructure
                                 fileValidationPassed = false;
 
                                 modelState.AddModelError(file.Name, "The PDF file must be smaller than 5MB.");
-                                errorMessages.Add(new ValidationErrorDetail(file.Name, "The PDF file must be smaller than 5MB."));                           
+                                errorMessages.Add(new ValidationErrorDetail(file.Name, "The PDF file must be smaller than 5MB."));
                             }
                         }
                     }
@@ -54,6 +54,30 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Infrastructure
             }
 
             return fileValidationPassed;
+        }
+
+        public static bool AllRequiredFilesArePresent(Page page, List<ValidationErrorDetail> errorMessages, ModelStateDictionary modelState)
+        {
+            var allRequiredFilesArePresent = true;
+
+            var requiredFileUploads = page.Questions.Where(q => q.Input.Type == "FileUpload" && q.Input.Validations.Any(v => v.Name == "Required"));
+
+            // Check an answer has been supplied for the required file upload
+            foreach (var requiredUpload in requiredFileUploads)
+            {
+                // Search through answers for the question and check it's not null or empty
+                var hasRequiredUpload = page.PageOfAnswers.SelectMany(pao => pao.Answers).Any(a => a.QuestionId == requiredUpload.QuestionId && !string.IsNullOrEmpty(a.Value));
+
+                if (!hasRequiredUpload)
+                {
+                    var typeValidation = requiredUpload.Input.Validations.First(v => v.Name == "Required");
+                    modelState.AddModelError(requiredUpload.QuestionId, typeValidation.ErrorMessage);
+                    errorMessages.Add(new ValidationErrorDetail(requiredUpload.QuestionId, typeValidation.ErrorMessage));
+                    allRequiredFilesArePresent = false;
+                }
+            }
+
+            return allRequiredFilesArePresent;
         }
     }
 }

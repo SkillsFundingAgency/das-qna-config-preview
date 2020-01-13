@@ -407,12 +407,12 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
                                 SetAnswerNotUpdated(page);
                                 return RedirectToAction("Page", new { Id, sequenceNo, sectionNo, pageId, __redirectAction, __summaryLink });
                             }
-                            else if (FileValidator.FileValidationPassed(answers, page, errorMessages, ModelState, HttpContext.Request.Form.Files))
+                            else if (FileValidator.AllRequiredFilesArePresent(page, errorMessages, ModelState))
                             {
                                 return RedirectToAction("Feedback", new { Id });
                             }
                         }
-                        else if (FileValidator.FileValidationPassed(answers, page, errorMessages, ModelState, HttpContext.Request.Form.Files))
+                        else if (FileValidator.AllRequiredFilesArePresent(page, errorMessages, ModelState))
                         {
                             return ForwardToNextSectionOrPage(page, Id, sequenceNo, sectionNo, __redirectAction);
                         }
