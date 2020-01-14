@@ -515,17 +515,15 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
                 {
                     if (question.Input.Type.StartsWith("DataFed_"))
                     {
-                        var deliveryAreas = new List<DeliveryArea>();
-                        deliveryAreas.Add(new DeliveryArea
-                        {
-                            Id = 8,
-                            Area = "West Midlands",
-                            Ordering = 0,
-                            Status = "Live"
-                        });
-                        var questionOptions = deliveryAreas.Select(da => new Option() { Label = da.Area, Value = da.Area }).ToList();
-
-                        question.Input.Options = questionOptions;
+                        var datafeedOptions = new List<Option>
+                        { 
+                            new Option { Label = "One", Value = "One" },
+                            new Option { Label = "Two", Value = "Two" },
+                            new Option { Label = "Three", Value = "Three" },
+                            new Option { Label = "Four", Value = "Four" }
+                        };
+ 
+                        question.Input.Options = datafeedOptions;
                         question.Input.Type = question.Input.Type.Replace("DataFed_", "");
                     }
                 }
@@ -661,8 +659,11 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
         {
             List<Answer> answers = new List<Answer>();
 
+            // These are special in that they drive other things and thus should not be deemed as an answer
+            var exludedInputs = new List<string> { "postcodeSearch","checkAll" };
+
             // Add answers from the Form post
-            foreach (var keyValuePair in HttpContext.Request.Form.Where(f => !f.Key.StartsWith("__") && !f.Key.EndsWith("postcodeSearch")))
+            foreach (var keyValuePair in HttpContext.Request.Form.Where(f => !f.Key.StartsWith("__") && !exludedInputs.Contains(f.Key, StringComparer.InvariantCultureIgnoreCase)))
             {
                 answers.Add(new Answer() { QuestionId = keyValuePair.Key, Value = keyValuePair.Value });
             }
