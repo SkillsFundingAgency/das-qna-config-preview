@@ -29,7 +29,7 @@ namespace SFA.DAS.QnA.Config.Preview.Web.ViewModels.Apply
 
         public string DisplayAnswerValue(Answer answer)
         {
-            var answerValue = answer.Value;
+            var answerValue = answer?.Value;
 
             if (!string.IsNullOrWhiteSpace(answer?.Value))
             {
@@ -51,7 +51,7 @@ namespace SFA.DAS.QnA.Config.Preview.Web.ViewModels.Apply
                 }
             }
 
-            return answerValue;
+            return answerValue ?? string.Empty;
         }
     }
 }
