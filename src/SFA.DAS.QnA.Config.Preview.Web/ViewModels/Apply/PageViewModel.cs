@@ -65,6 +65,13 @@ namespace SFA.DAS.QnA.Config.Preview.Web.ViewModels.Apply
             LinkTitle = page.LinkTitle;
             DisplayType = page.DisplayType;
             PageId = page.PageId;
+            SectionId = page.SectionId ?? Guid.Empty;
+
+            Feedback = page.Feedback;
+            HasFeedback = page.HasFeedback;
+
+            BodyText = page.BodyText;
+            Details = page.Details;
 
             AllowMultipleAnswers = page.AllowMultipleAnswers;
             PageOfAnswers = page.PageOfAnswers ?? new List<PageOfAnswers>();
@@ -75,9 +82,6 @@ namespace SFA.DAS.QnA.Config.Preview.Web.ViewModels.Apply
                 PageOfAnswers = page.PageOfAnswers.Take(page.PageOfAnswers.Count - 1).ToList();
             }
 
-            SectionId = page.SectionId ?? Guid.Empty;
-
-            var questions = page.Questions;
             var answers = new List<Answer>();
             
             // Grab the latest answer for each question stored within the page
@@ -95,7 +99,7 @@ namespace SFA.DAS.QnA.Config.Preview.Web.ViewModels.Apply
             }
 
             Questions = new List<QuestionViewModel>();
-            Questions.AddRange(questions.Select(q => new QuestionViewModel()
+            Questions.AddRange(page.Questions.Select(q => new QuestionViewModel()
             {
                 Label = q.Label,
                 ShortLabel = q.ShortLabel,
@@ -119,11 +123,6 @@ namespace SFA.DAS.QnA.Config.Preview.Web.ViewModels.Apply
                 RedirectAction = RedirectAction
             }));
 
-            Feedback = page.Feedback;
-            HasFeedback = page.HasFeedback;
-            BodyText = page.BodyText;
-
-            Details = page.Details;
 
             foreach (var question in Questions)
             {
@@ -169,7 +168,8 @@ namespace SFA.DAS.QnA.Config.Preview.Web.ViewModels.Apply
                 JToken.Parse(json);
                 return JsonConvert.DeserializeObject<dynamic>(json);
 
-            }catch(Exception)
+            }
+            catch(Exception)
             {
                 return null;
             }
