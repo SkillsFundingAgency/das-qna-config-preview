@@ -67,27 +67,30 @@ namespace SFA.DAS.QnA.Config.Preview.Web.ViewModels.Apply
             PageId = page.PageId;
 
             AllowMultipleAnswers = page.AllowMultipleAnswers;
-            if (errorMessages != null && errorMessages.Any())
+            PageOfAnswers = page.PageOfAnswers ?? new List<PageOfAnswers>();
+
+            // MultipleAnswer questions stores the last failed attempt as a previous answer so it needs to be removed
+            if (AllowMultipleAnswers && errorMessages != null && errorMessages.Any())
             {
                 PageOfAnswers = page.PageOfAnswers.Take(page.PageOfAnswers.Count - 1).ToList();
-            }
-            else
-            {
-                PageOfAnswers = page.PageOfAnswers;
             }
 
             SectionId = page.SectionId ?? Guid.Empty;
 
             var questions = page.Questions;
             var answers = new List<Answer>();
-            foreach (var pageAnswer in page.PageOfAnswers)
+            
+            // Grab the latest answer for each question stored within the page
+            foreach (var pageAnswer in page.PageOfAnswers.SelectMany(poa => poa.Answers))
             {
-                foreach(var ans in pageAnswer.Answers)
+                var currentAnswer = answers.FirstOrDefault(a => a.QuestionId == pageAnswer.QuestionId);
+                if (currentAnswer is null)
                 {
-                    if (!answers.Exists(x =>ans.QuestionId == x.QuestionId))
-                    {
-                        answers.Add(ans);
-                    }
+                    answers.Add(new Answer() { QuestionId = pageAnswer.QuestionId, Value = pageAnswer.Value });
+                }
+                else
+                {
+                    currentAnswer.Value = pageAnswer.Value;
                 }
             }
 
