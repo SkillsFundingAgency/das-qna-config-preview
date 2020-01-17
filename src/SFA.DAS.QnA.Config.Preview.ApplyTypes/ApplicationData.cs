@@ -138,12 +138,4 @@ namespace SFA.DAS.QnA.Config.Preview.ApplyTypes
         public const string Questions = "Questions";
         public const string PagesWithSections = "PagesWithSections";
     }
-
-    public class DeliveryArea
-    {
-        public int Id { get; set; }
-        public string Area { get; set; }
-        public string Status { get; set; }
-        public int Ordering { get; set; }
-    }
 }
