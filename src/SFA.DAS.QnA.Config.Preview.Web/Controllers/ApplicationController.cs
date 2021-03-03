@@ -10,6 +10,7 @@ using SFA.DAS.QnA.Api.Types.Page;
 using SFA.DAS.QnA.Config.Preview.Api.Client;
 using SFA.DAS.QnA.Config.Preview.ApplyTypes;
 using SFA.DAS.QnA.Config.Preview.Web.ViewModels.Apply;
+using SFA.DAS.QnA.Config.Preview.Web.Helpers;
 using SFA.DAS.QnA.Config.Preview.Web.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -264,6 +265,9 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
                 }
 
             }
+
+            var applicationData = await _qnaApiClient.GetApplicationDataDictionary(Id);
+            ReplaceApplicationDataPropertyPlaceholdersInQuestions(viewModel.Questions, applicationData);
 
             if (viewModel.AllowMultipleAnswers)
             {
@@ -767,6 +771,19 @@ namespace SFA.DAS.QnA.Config.Preview.Web.Controllers
             }
 
             return answers;
+        }
+
+        private void ReplaceApplicationDataPropertyPlaceholdersInQuestions(List<QuestionViewModel> questions, Dictionary<string, object> applicationData)
+        {
+            if (questions == null) return;
+
+            foreach (var question in questions)
+            {
+                question.Label = ApplicationDataFormatHelper.FormatApplicationDataPropertyPlaceholders(question.Label, applicationData);
+                question.Hint = ApplicationDataFormatHelper.FormatApplicationDataPropertyPlaceholders(question.Hint, applicationData);
+                question.QuestionBodyText = ApplicationDataFormatHelper.FormatApplicationDataPropertyPlaceholders(question.QuestionBodyText, applicationData);
+                question.ShortLabel = ApplicationDataFormatHelper.FormatApplicationDataPropertyPlaceholders(question.ShortLabel, applicationData);
+            }
         }
 
 
