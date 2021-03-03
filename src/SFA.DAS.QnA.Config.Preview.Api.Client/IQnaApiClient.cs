@@ -13,6 +13,7 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
     {
         Task<StartApplicationResponse> StartApplications(StartApplicationRequest startAppRequest);
         Task<ApplicationData> GetApplicationData(Guid applicationId);
+        Task<Dictionary<string, object>> GetApplicationDataDictionary(Guid applicationId);
         Task<ApplicationData> UpdateApplicationData(Guid applicationId, ApplicationData applicationData);
         Task<Sequence> GetApplicationActiveSequence(Guid applicationId);
         Task<List<Sequence>> GetAllApplicationSequences(Guid applicationId);

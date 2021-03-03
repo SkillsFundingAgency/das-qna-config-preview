@@ -190,6 +190,15 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
             }
         }
 
+        public async Task<Dictionary<string, object>> GetApplicationDataDictionary(Guid applicationId)
+        {
+            using (var request = new HttpRequestMessage(HttpMethod.Get, $"/applications/{applicationId}/applicationData"))
+            {
+                return await RequestAndDeserialiseAsync<Dictionary<string, object>>(request,
+                    $"Could not find the application");
+            }
+        }
+
         public async Task<ApplicationData> UpdateApplicationData(Guid applicationId, ApplicationData applicationData)
         {
             using (var request = new HttpRequestMessage(HttpMethod.Post, $"/applications/{applicationId}/applicationData"))
