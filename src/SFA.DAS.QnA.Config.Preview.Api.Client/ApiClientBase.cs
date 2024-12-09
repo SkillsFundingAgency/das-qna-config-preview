@@ -2,7 +2,6 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Polly;
-using Polly.Extensions.Http;
 using Polly.Retry;
 using System;
 using System.Net;
@@ -18,7 +17,7 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
         private readonly ILogger<QnaApiClient> _logger;
         protected HttpClient HttpClient;
 
-        private readonly AsyncRetryPolicy<HttpResponseMessage> _retryPolicy;
+        private IAsyncPolicy<HttpResponseMessage> _retryPolicy;
 
         protected readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings
         {
@@ -34,11 +33,13 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
 
             HttpClient = new HttpClient { BaseAddress = new Uri($"{baseUri}") };
 
-            _retryPolicy = HttpPolicyExtensions
-                    .HandleTransientHttpError()
-                //                    .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.NotFound)
-                .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2,
-                    retryAttempt)));
+            _retryPolicy = Policy
+                .Handle<HttpRequestException>()
+                .OrResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
+                .WaitAndRetryAsync(
+                    retryCount: 3,
+                    sleepDurationProvider: retryAttempt =>
+                        TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
         }
 
         protected ApiClientBase(HttpClient httpClient, ITokenService tokenService, ILogger<QnaApiClient> logger)
@@ -49,12 +50,14 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
 
             HttpClient = httpClient;
 
-            _retryPolicy = HttpPolicyExtensions
-                .HandleTransientHttpError()
-                .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.NotFound)
-                .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2,
-                    retryAttempt)));
-        }
+            _retryPolicy = Policy
+                .Handle<HttpRequestException>() 
+                .OrResult<HttpResponseMessage>(msg => msg.StatusCode == System.Net.HttpStatusCode.NotFound) 
+                .WaitAndRetryAsync(
+                    retryCount: 3, 
+                    sleepDurationProvider: retryAttempt =>
+                        TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))); 
+                }
 
 
         protected static void RaiseResponseError(string message, HttpRequestMessage failedRequest, HttpResponseMessage failedResponse)

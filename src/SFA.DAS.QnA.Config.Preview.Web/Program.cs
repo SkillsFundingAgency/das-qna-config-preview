@@ -2,6 +2,7 @@ using System;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using NLog;
 using NLog.Web;
 
 namespace SFA.DAS.QnA.Config.Preview.Web
@@ -10,11 +11,11 @@ namespace SFA.DAS.QnA.Config.Preview.Web
     {
         public static void Main(string[] args)
         {
-            var logger = NLogBuilder.ConfigureNLog("nlog.config").GetCurrentClassLogger();
+            var logger = LogManager.Setup().LoadConfigurationFromFile("nlog.config").GetCurrentClassLogger();
             try
             {
                 logger.Info("Starting up host");
-                CreateWebHostBuilder(args).Build().Run();
+                CreateHostBuilder(args).Build().Run();
             }
             catch (Exception ex)
             {
@@ -24,14 +25,14 @@ namespace SFA.DAS.QnA.Config.Preview.Web
             }
         }
 
-        public static IHostBuilder CreateWebHostBuilder(string[] args) =>
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
                     webBuilder.UseKestrel();
                     webBuilder.UseUrls("https://localhost:5666");
-                    webBuilder.UseNLog();
-                });
+                })
+            .UseNLog();
     }
 }

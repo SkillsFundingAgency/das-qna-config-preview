@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Extensions.Hosting;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Identity.Client;
 using SFA.DAS.QnA.Config.Preview.Settings;
+using System;
 
 namespace SFA.DAS.QnA.Config.Preview.Api.Client
 {
@@ -26,13 +24,15 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
 
             var tenantId = _configuration.QnaApiAuthentication.TenantId;
             var clientId = _configuration.QnaApiAuthentication.ClientId;
-            var appKey = _configuration.QnaApiAuthentication.ClientSecret;
-            var resourceId = _configuration.QnaApiAuthentication.ResourceId;
+            var clientSecret = _configuration.QnaApiAuthentication.ClientSecret;
+            var scope = new[] { _configuration.QnaApiAuthentication.ResourceId + "/.default" };
 
-            var authority = $"https://login.microsoftonline.com/{tenantId}";
-            var clientCredential = new ClientCredential(clientId, appKey);
-            var context = new AuthenticationContext(authority, true);
-            var result = context.AcquireTokenAsync(resourceId, clientCredential).Result;
+            var app = ConfidentialClientApplicationBuilder.Create(clientId)
+                .WithClientSecret(clientSecret)
+                .WithAuthority(new Uri($"https://login.microsoftonline.com/{tenantId}"))
+                .Build();
+
+            var result = app.AcquireTokenForClient(scope).ExecuteAsync().Result;
 
             return result.AccessToken;
         }

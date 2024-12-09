@@ -1,6 +1,6 @@
-﻿using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Table;
-using Newtonsoft.Json;
+﻿using Azure;
+using Azure.Data.Tables;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Threading.Tasks;
 
@@ -13,27 +13,24 @@ namespace SFA.DAS.QnA.Config.Preview.Settings
             if (environment == null) throw new ArgumentNullException(nameof(environment));
             if (storageConnectionString == null) throw new ArgumentNullException(nameof(storageConnectionString));
 
-            var conn = CloudStorageAccount.Parse(storageConnectionString);
-            var tableClient = conn.CreateCloudTableClient();
-            var table = tableClient.GetTableReference("Configuration");
-
-            var operation = TableOperation.Retrieve(environment, $"{serviceName}_{version}");
-            TableResult result;
             try
             {
-                result = await table.ExecuteAsync(operation);
+                var tableClient = new TableClient(storageConnectionString, "Configuration");
+
+                var entity = await tableClient.GetEntityAsync<TableEntity>(environment, $"{serviceName}_{version}");
+                var dataString = entity.Value.GetString("Data");
+
+                if (string.IsNullOrEmpty(dataString))
+                    throw new Exception("The 'Data' property is missing or empty.");
+
+                return JObject.Parse(dataString).ToObject<WebConfiguration>()
+                    ?? throw new Exception("Failed to deserialize 'Data' into WebConfiguration.");
             }
-            catch (Exception e)
+            catch (RequestFailedException e)
             {
                 throw new Exception("Could not connect to Storage to retrieve settings.", e);
             }
 
-            var dynResult = result.Result as DynamicTableEntity;
-            var data = dynResult.Properties["Data"].StringValue;
-
-            var webConfig = JsonConvert.DeserializeObject<WebConfiguration>(data);
-
-            return webConfig;
         }
     }
 }
