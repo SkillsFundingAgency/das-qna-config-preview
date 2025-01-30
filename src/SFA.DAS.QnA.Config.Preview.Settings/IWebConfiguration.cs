@@ -2,6 +2,6 @@
 {
     public interface IWebConfiguration
     {
-        ClientApiAuthentication QnaApiAuthentication { get; set; }
+        QnaApiClientConfiguration QnaApiAuthentication { get; set; }
     }
 }
