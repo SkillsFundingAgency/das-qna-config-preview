@@ -14,6 +14,7 @@ using SFA.DAS.QnA.Config.Preview.Web.Extensions;
 using System.Reflection;
 using System.IO;
 using FluentValidation;
+using Azure.Identity;
 
 namespace SFA.DAS.QnA.Config.Preview.Web
 {
@@ -67,10 +68,15 @@ namespace SFA.DAS.QnA.Config.Preview.Web
             services.AddHttpContextAccessor();
            
             services.AddTransient<IWebConfiguration, WebConfiguration>();
-            services.AddTransient<ITokenService, TokenService>(s => new TokenService(Configuration, _hostingEnvironment));
             services.AddSingleton<ISessionService>( s => new SessionService(s.GetRequiredService<IHttpContextAccessor>(), _config["EnvironmentName"]));
-            services.AddTransient<IQnaApiClient>(s => new QnaApiClient(Configuration.QnaApiAuthentication.ApiBaseAddress, s.GetService<ITokenService>(), s.GetService<ILogger<QnaApiClient>>()));
-          
+            services.AddTransient<IQnaApiClient>(s =>
+            {
+                var logger = s.GetService<ILogger<QnaApiClient>>();
+                var credential = new DefaultAzureCredential(); 
+
+                return new QnaApiClient(Configuration.QnaApiAuthentication, credential, logger);
+            });
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("preview", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "QnA API Config Preview", Version = "0.1" });

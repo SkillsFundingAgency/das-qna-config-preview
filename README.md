@@ -18,7 +18,7 @@
 #### Setup
 
 - Create a Configuration table in your (Development) local storage account.
-- Add a row to the Configuration table with fields: PartitionKey: LOCAL, RowKey: SFA.DAS.QnA.Config.Preview_1.0 Data: {The QnaApiAuthentication  contents of the QnA Api config json file}.
+- Add a row to the Configuration table with fields: PartitionKey: LOCAL, RowKey: SFA.DAS.QnA.Config.Preview_1.0 Data:{"QnaApiAuthentication": {"IdentifierUri": "https://citizenazuresfabisgov.onmicrosoft.com/das-at-qna-as-ar","ApiBaseUrl": "https://at-qna-api.apprenticeships.education.gov.uk/"}.
 
 ##### Open the solution
 

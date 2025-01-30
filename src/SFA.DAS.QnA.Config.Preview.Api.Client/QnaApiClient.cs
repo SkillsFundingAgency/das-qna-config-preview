@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SFA.DAS.QnA.Api.Types;
 using SFA.DAS.QnA.Api.Types.Page;
 using SFA.DAS.QnA.Config.Preview.ApplyTypes;
+using SFA.DAS.QnA.Config.Preview.Settings;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -16,7 +19,7 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
     public class QnaApiClient : ApiClientBase, IQnaApiClient
     {
 
-        public QnaApiClient(string baseUri, ITokenService qnaTokenService, ILogger<QnaApiClient> logger) : base(baseUri, qnaTokenService, logger)
+        public QnaApiClient(QnaApiClientConfiguration configuration, TokenCredential tokenCredential, ILogger<QnaApiClient> logger) : base(configuration, tokenCredential, logger)
         {
         }
 

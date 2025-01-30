@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Azure.Core;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Polly;
-using Polly.Retry;
+using SFA.DAS.Http;
+using SFA.DAS.QnA.Config.Preview.Settings;
 using System;
 using System.Net;
 using System.Net.Http;
@@ -13,7 +15,7 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
 {
     public abstract class ApiClientBase : IDisposable
     {
-        protected ITokenService TokenService;
+        private readonly TokenCredential  _tokenCredential;
         private readonly ILogger<QnaApiClient> _logger;
         protected HttpClient HttpClient;
 
@@ -25,13 +27,13 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
             NullValueHandling = NullValueHandling.Ignore
         };
 
-        protected ApiClientBase(string baseUri, ITokenService tokenService, ILogger<QnaApiClient> logger)
+        protected ApiClientBase(QnaApiClientConfiguration configuration, TokenCredential tokenCredential, ILogger<QnaApiClient> logger)
         {
             _logger = logger;
+            _tokenCredential = tokenCredential;
 
-            TokenService = tokenService;
+            HttpClient = new ManagedIdentityHttpClientFactory(configuration).CreateHttpClient();
 
-            HttpClient = new HttpClient { BaseAddress = new Uri($"{baseUri}") };
 
             _retryPolicy = Policy
                 .Handle<HttpRequestException>()
@@ -42,12 +44,10 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
                         TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
         }
 
-        protected ApiClientBase(HttpClient httpClient, ITokenService tokenService, ILogger<QnaApiClient> logger)
+        protected ApiClientBase(HttpClient httpClient, TokenCredential tokenCredential, ILogger<QnaApiClient> logger)
         {
-            TokenService = tokenService;
-
             _logger = logger;
-
+            _tokenCredential = tokenCredential;
             HttpClient = httpClient;
 
             _retryPolicy = Policy
@@ -92,9 +92,6 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
             var result = await _retryPolicy.ExecuteAsync(async () =>
             {
                 clonedRequest = new HttpRequestMessage(request.Method, request.RequestUri);
-                clonedRequest.Headers.Add("Accept", "application/json");
-                clonedRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", TokenService.GetToken());
-
                 return await HttpClient.SendAsync(clonedRequest);
 
             });
@@ -132,10 +129,8 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
             var response = await _retryPolicy.ExecuteAsync(async () =>
             {
                 clonedRequest = new HttpRequestMessage(requestMessage.Method, requestMessage.RequestUri);
-                clonedRequest.Headers.Add("Accept", "application/json");
                 clonedRequest.Content = new StringContent(serializeObject,
                     System.Text.Encoding.UTF8, "application/json");
-                clonedRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", TokenService.GetToken());
 
                 return await HttpClient.SendAsync(clonedRequest);
 
@@ -165,17 +160,13 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
             var response = await _retryPolicy.ExecuteAsync(async () =>
             {
                 clonedRequest = new HttpRequestMessage(requestMessage.Method, requestMessage.RequestUri);
-                clonedRequest.Headers.Add("Accept", "application/json");
                 clonedRequest.Content = new StringContent(serializeObject,
                     System.Text.Encoding.UTF8, "application/json");
-                clonedRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", TokenService.GetToken());
 
                 return await HttpClient.SendAsync(clonedRequest);
-
             });
 
             var json = await response.Content.ReadAsStringAsync();
-            //var result = await response;
             if (response.StatusCode == HttpStatusCode.OK
                 || response.StatusCode == HttpStatusCode.Created
                 || response.StatusCode == HttpStatusCode.NoContent)
@@ -199,7 +190,6 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
             {
                 clonedRequest = new HttpRequestMessage(requestMessage.Method, requestMessage.RequestUri);
                 clonedRequest.Content = formDataContent;
-                clonedRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", TokenService.GetToken());
 
                 return await HttpClient.SendAsync(clonedRequest);
 
@@ -221,14 +211,13 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
             }
         }
 
-        protected async Task<HttpResponseMessage> RequestToDownloadFile(HttpRequestMessage request, string message = null)
+        protected async Task<HttpResponseMessage> RequestToDownloadFile(HttpRequestMessage request, string message = null)  
         {
             HttpRequestMessage clonedRequest = null;
 
             var result = await _retryPolicy.ExecuteAsync(async () =>
             {
                 clonedRequest = new HttpRequestMessage(request.Method, request.RequestUri);
-                clonedRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", TokenService.GetToken());
 
                 return await HttpClient.SendAsync(clonedRequest);
 
@@ -265,10 +254,8 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
             var response = await _retryPolicy.ExecuteAsync(async () =>
             {
                 clonedRequest = new HttpRequestMessage(requestMessage.Method, requestMessage.RequestUri);
-                clonedRequest.Headers.Add("Accept", "application/json");
                 clonedRequest.Content = new StringContent(serializeObject,
                     System.Text.Encoding.UTF8, "application/json");
-                clonedRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", TokenService.GetToken());
 
                 return await HttpClient.SendAsync(clonedRequest);
 
@@ -286,7 +273,6 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
             var response = await _retryPolicy.ExecuteAsync(async () =>
             {
                 clonedRequest = new HttpRequestMessage(requestMessage.Method, requestMessage.RequestUri);
-                clonedRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", TokenService.GetToken());
 
                 return await HttpClient.SendAsync(clonedRequest);
 
@@ -304,7 +290,6 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
             var response = await _retryPolicy.ExecuteAsync(async () =>
             {
                 clonedRequest = new HttpRequestMessage(requestMessage.Method, requestMessage.RequestUri);
-                clonedRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", TokenService.GetToken());
 
                 return await HttpClient.SendAsync(clonedRequest);
 
@@ -322,14 +307,12 @@ namespace SFA.DAS.QnA.Config.Preview.Api.Client
             var response = await _retryPolicy.ExecuteAsync(async () =>
             {
                 clonedRequest = new HttpRequestMessage(requestMessage.Method, requestMessage.RequestUri);
-                clonedRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", TokenService.GetToken());
 
                 return await HttpClient.SendAsync(clonedRequest);
 
             });
 
             var json = await response.Content.ReadAsStringAsync();
-            //var result = await response;
             if (response.StatusCode == HttpStatusCode.OK
                 || response.StatusCode == HttpStatusCode.NoContent)
             {
